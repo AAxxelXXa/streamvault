@@ -315,7 +315,7 @@ export default function StreamVault() {
     };
     saveRequests([req, ...requests]);
     await tgNotify(`📨 <b>Nueva solicitud de acceso</b>\nUsuario: ${reqName}\nPlataforma: ${selPlatform.name}\nFecha: ${req.date}\n\nResponde en: @alex_eren`);
-    window.open(TELEGRAM_LINK, "_blank");
+    window.open(`https://thttp://t.me/Jagerchk_bot?start=solicitar_${selPlatform.id}`);
     setModal(null); setReqName(""); toast("Solicitud enviada. Redirigiendo a Telegram…");
   }
 
