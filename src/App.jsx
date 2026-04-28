@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import {
   Shield, Plus, LogOut, Send, Check, X, Eye, EyeOff, ChevronRight,
   Package, Bell, Trash2, Copy, Search, Calendar, Key, AlertTriangle,
-  UserCheck, ToggleLeft, ToggleRight, Lock, Unlock, Clock, Users, RefreshCw
+  UserCheck, ToggleLeft, ToggleRight, Lock, Unlock, Clock, Users, RefreshCw,
+  Star, Gift, FileText, Zap
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
@@ -372,7 +373,24 @@ export default function StreamVault() {
   if (loading) return <div style={{ minHeight:"100vh",background:"#080810",display:"flex",alignItems:"center",justifyContent:"center",color:"#6366f1",fontSize:18,fontWeight:700,fontFamily:"system-ui" }}>Cargando StreamVault...</div>;
 
   return (
-    <div style={{ minHeight:"100vh",background:"#080810",color:"#f0f0f5",fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+    <div style={{ minHeight:"100vh",background:"#080810",color:"#f0f0f5",fontFamily:"'Segoe UI',system-ui,sans-serif",position:"relative" }}>
+      {/* Fondo animado */}
+      <div style={{ position:"fixed",inset:0,zIndex:0,pointerEvents:"none",overflow:"hidden" }}>
+        <div style={{ position:"absolute",width:"600px",height:"600px",borderRadius:"50%",background:"radial-gradient(circle,#6366f118,transparent 70%)",top:"-200px",left:"-200px",animation:"float1 8s ease-in-out infinite" }}/>
+        <div style={{ position:"absolute",width:"500px",height:"500px",borderRadius:"50%",background:"radial-gradient(circle,#a855f718,transparent 70%)",top:"30%",right:"-150px",animation:"float2 10s ease-in-out infinite" }}/>
+        <div style={{ position:"absolute",width:"400px",height:"400px",borderRadius:"50%",background:"radial-gradient(circle,#ec489918,transparent 70%)",bottom:"-100px",left:"30%",animation:"float3 12s ease-in-out infinite" }}/>
+        <div style={{ position:"absolute",width:"300px",height:"300px",borderRadius:"50%",background:"radial-gradient(circle,#3b5bdb18,transparent 70%)",top:"60%",left:"-100px",animation:"float1 9s ease-in-out infinite reverse" }}/>
+        <div style={{ position:"absolute",inset:0,backgroundImage:"linear-gradient(#ffffff03 1px,transparent 1px),linear-gradient(90deg,#ffffff03 1px,transparent 1px)",backgroundSize:"60px 60px" }}/>
+      </div>
+      <div style={{ position:"relative",zIndex:1 }}>
+
+      {/* BANNER OFERTA */}
+      {(view==="home"||view==="platform")&&clientUser&&(
+        <div style={{ background:"linear-gradient(90deg,#6366f1,#a855f7,#ec4899,#a855f7,#6366f1)",backgroundSize:"300% 100%",animation:"bannerPulse 4s ease infinite",padding:"10px 16px",textAlign:"center",fontSize:13,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",gap:8,flexWrap:"wrap" }}>
+          <Zap size={14}/> 🎉 OFERTA ESPECIAL: Plan 3 meses por solo S/. 25 esta semana · Recomienda y ambos ganan 1 semana GRATIS
+          <button onClick={()=>window.open("https://wa.me/51901815489?text=Hola! Vi la oferta especial y quiero el plan 3 meses por S/. 25","_blank")} style={{ background:"#ffffff22",border:"1px solid #ffffff44",borderRadius:6,padding:"3px 10px",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700 }}>¡Aprovechar!</button>
+        </div>
+      )}
 
       {/* Toast */}
       {notif&&<div style={{ position:"fixed",top:16,right:16,left:16,zIndex:9999,background:notif.type==="error"?"#450a0a":notif.type==="warn"?"#1a0f00":"#052e16",border:`1px solid ${notif.type==="error"?"#7f1d1d":notif.type==="warn"?"#78350f":"#166534"}`,color:notif.type==="error"?"#f87171":notif.type==="warn"?"#fbbf24":"#4ade80",borderRadius:12,padding:"12px 20px",fontSize:14,fontWeight:500,display:"flex",alignItems:"center",gap:8,maxWidth:420,margin:"0 auto",boxShadow:"0 8px 32px #00000066" }}>{notif.type==="error"?<X size={15}/>:notif.type==="warn"?<AlertTriangle size={15}/>:<Check size={15}/>}{notif.msg}</div>}
@@ -1083,6 +1101,104 @@ export default function StreamVault() {
             </div>
           </div>
 
+          {/* CONTADOR ANIMADO */}
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:48 }}>
+            {[
+              {label:"Clientes satisfechos",value:users.length+48,icon:"😊",color:"#6366f1"},
+              {label:"Cuentas disponibles",value:availableAcc,icon:"✅",color:"#1DB954"},
+              {label:"Plataformas",value:12,icon:"🎬",color:"#a855f7"},
+              {label:"Años de servicio",value:2,icon:"⭐",color:"#fbbf24"},
+            ].map(s=>(
+              <div key={s.label} style={{ background:"#0f0f1a",border:,borderRadius:16,padding:"20px 16px",textAlign:"center" }}>
+                <div style={{ fontSize:28,marginBottom:6 }}>{s.icon}</div>
+                <div style={{ fontSize:36,fontWeight:900,color:s.color,letterSpacing:-1,animation:"fadeIn 0.5s ease" }}>{s.value}+</div>
+                <div style={{ fontSize:12,color:"#6b7280",marginTop:4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* LOGOS ANIMADOS */}
+          <div style={{ marginBottom:48,overflow:"hidden" }}>
+            <div style={{ textAlign:"center",marginBottom:20 }}>
+              <p style={{ color:"#6b7280",fontSize:13,margin:0 }}>Plataformas disponibles en StreamVault</p>
+            </div>
+            <div style={{ display:"flex",animation:"marquee 20s linear infinite",width:"max-content" }}>
+              {[...PLATFORMS,...PLATFORMS].map((p,i)=>(
+                <div key={i} style={{ display:"flex",alignItems:"center",gap:8,margin:"0 16px",background:"#0f0f1a",border:,borderRadius:12,padding:"8px 14px",flexShrink:0 }}>
+                  <div style={{ width:28,height:28,borderRadius:8,background:p.color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:11,color:"#fff" }}>{p.icon}</div>
+                  <span style={{ fontSize:13,fontWeight:600,whiteSpace:"nowrap" }}>{p.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* GARANTÍA */}
+          <div style={{ marginBottom:48 }}>
+            <div style={{ textAlign:"center",marginBottom:24 }}>
+              <div style={{ display:"inline-block",background:"#1e1e2e",border:"1px solid #6366f133",borderRadius:999,padding:"4px 14px",fontSize:11,fontWeight:700,color:"#a78bfa",letterSpacing:1.2,textTransform:"uppercase",marginBottom:10 }}>Garantía</div>
+              <h2 style={{ fontSize:"clamp(20px,4vw,32px)",fontWeight:800,margin:0 }}>Tu satisfacción es nuestra prioridad</h2>
+            </div>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14 }}>
+              {[
+                {icon:"🔄",title:"Reemplazo garantizado",desc:"Si tu cuenta deja de funcionar, la reemplazamos sin costo adicional en menos de 24 horas."},
+                {icon:"💰",title:"Reembolso disponible",desc:"Si no puedes acceder a tu cuenta en los primeros 3 días, te devolvemos tu dinero."},
+                {icon:"🔒",title:"Datos seguros",desc:"Tus credenciales están protegidas. Nunca compartimos tu información con terceros."},
+                {icon:"⚡",title:"Soporte inmediato",desc:"Respondemos en menos de 1 hora por Telegram y WhatsApp, todos los días."},
+              ].map((g,i)=>(
+                <div key={i} style={{ background:"#0f0f1a",border:"1px solid #052e1688",borderRadius:16,padding:20,display:"flex",gap:12,alignItems:"flex-start" }}>
+                  <div style={{ fontSize:28,flexShrink:0 }}>{g.icon}</div>
+                  <div><div style={{ fontWeight:700,fontSize:14,marginBottom:5,color:"#4ade80" }}>{g.title}</div><div style={{ fontSize:12,color:"#6b7280",lineHeight:1.6 }}>{g.desc}</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SISTEMA DE REFERIDOS */}
+          <div style={{ background:"linear-gradient(135deg,#1a0a2e,#0c1a3a)",border:"1px solid #6366f133",borderRadius:20,padding:28,marginBottom:48,textAlign:"center" }}>
+            <div style={{ fontSize:36,marginBottom:10 }}>🎁</div>
+            <h2 style={{ fontSize:22,fontWeight:800,margin:"0 0 8px" }}>Sistema de Referidos</h2>
+            <p style={{ color:"#9ca3af",fontSize:14,margin:"0 0 16px" }}>¡Recomienda StreamVault y gana recompensas!</p>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14,marginBottom:20 }}>
+              {[
+                {icon:"👥",title:"Comparte tu link",desc:"Comparte nuestro sitio con tus amigos y familiares."},
+                {icon:"✅",title:"Tu amigo se suscribe",desc:"Cuando tu amigo compra cualquier plan."},
+                {icon:"🎉",title:"Ambos ganan",desc:"Tú y tu amigo reciben 1 semana GRATIS."},
+              ].map((r,i)=>(
+                <div key={i} style={{ background:"#ffffff08",borderRadius:12,padding:14 }}>
+                  <div style={{ fontSize:24,marginBottom:8 }}>{r.icon}</div>
+                  <div style={{ fontWeight:700,fontSize:13,marginBottom:4 }}>{r.title}</div>
+                  <div style={{ fontSize:11,color:"#6b7280",lineHeight:1.5 }}>{r.desc}</div>
+                </div>
+              ))}
+            </div>
+            <Btn onClick={()=>window.open("https://wa.me/51901815489?text=Hola! Quiero información sobre el sistema de referidos de StreamVault","_blank")} style={{ background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none" }}>
+              <Gift size={14}/> Unirme al programa de referidos
+            </Btn>
+          </div>
+
+          {/* TÉRMINOS Y CONDICIONES */}
+          <div style={{ marginBottom:48,maxWidth:700,margin:"0 auto 48px" }}>
+            <div style={{ textAlign:"center",marginBottom:20 }}>
+              <div style={{ display:"inline-block",background:"#1e1e2e",border:"1px solid #6366f133",borderRadius:999,padding:"4px 14px",fontSize:11,fontWeight:700,color:"#a78bfa",letterSpacing:1.2,textTransform:"uppercase",marginBottom:10 }}>Legal</div>
+              <h2 style={{ fontSize:"clamp(18px,3vw,28px)",fontWeight:800,margin:0 }}>Términos y Condiciones</h2>
+            </div>
+            <div style={{ background:"#0f0f1a",border:"1px solid #ffffff0e",borderRadius:16,padding:20,fontSize:12,color:"#9ca3af",lineHeight:1.8 }}>
+              {[
+                "1. El servicio de StreamVault proporciona acceso a cuentas de streaming de terceros. No somos afiliados oficiales de ninguna plataforma.",
+                "2. Al contratar el servicio, el usuario acepta no cambiar contraseñas, emails ni datos de las cuentas asignadas.",
+                "3. No está permitido compartir las credenciales recibidas con personas fuera del plan contratado.",
+                "4. StreamVault garantiza el reemplazo de cuentas que dejen de funcionar por causas ajenas al usuario.",
+                "5. El reembolso aplica únicamente si el servicio no puede ser prestado en los primeros 3 días.",
+                "6. StreamVault se reserva el derecho de suspender el servicio a usuarios que incumplan estos términos.",
+                "7. Los precios pueden cambiar con previo aviso de 48 horas por los canales de comunicación oficiales.",
+                "8. Para dudas o reclamos, contactar al administrador por Telegram @alex_eren o WhatsApp +51 901 815 489.",
+              ].map((t,i)=>(
+                <p key={i} style={{ margin:"0 0 8px",paddingLeft:8,borderLeft:"2px solid #6366f133" }}>{t}</p>
+              ))}
+              <p style={{ margin:"12px 0 0",fontSize:11,color:"#4b5563" }}>Última actualización: Enero 2025 · Al usar el servicio, aceptas estos términos.</p>
+            </div>
+          </div>
+
           {/* CONTACTO */}
           <div style={{ background:"linear-gradient(135deg,#1a0a2e,#0c1a3a)", border:"1px solid #6366f133", borderRadius:20, padding:28, textAlign:"center", maxWidth:600, margin:"0 auto" }}>
             <div style={{ fontSize:32, marginBottom:10 }}>💬</div>
@@ -1100,7 +1216,23 @@ export default function StreamVault() {
         </div>
       )}
 
-      <style>{`*{box-sizing:border-box}input::placeholder{color:#4b5563}select option{background:#0f0f1a}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#080810}::-webkit-scrollbar-thumb{background:#ffffff1a;border-radius:3px}details summary::-webkit-details-marker{display:none}`}</style>
+      </div>{/* end zIndex wrapper */}
+
+      <style>{`
+        *{box-sizing:border-box}
+        input::placeholder{color:#4b5563}
+        select option{background:#0f0f1a}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:#080810}
+        ::-webkit-scrollbar-thumb{background:#ffffff1a;border-radius:3px}
+        details summary::-webkit-details-marker{display:none}
+        @keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-40px) scale(1.05)}}
+        @keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,30px) scale(1.08)}}
+        @keyframes float3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,40px) scale(0.95)}}
+        @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        @keyframes slideDown{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes bannerPulse{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+      `}</style>
     </div>
   );
 }
