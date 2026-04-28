@@ -976,7 +976,131 @@ export default function StreamVault() {
         </Modal>
       )}
 
-      <style>{`*{box-sizing:border-box}input::placeholder{color:#4b5563}select option{background:#0f0f1a}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#080810}::-webkit-scrollbar-thumb{background:#ffffff1a;border-radius:3px}`}</style>
+      {/* ═══ SECCIONES HOME (solo para clientes logueados) ═══ */}
+      {(view==="home")&&clientUser&&(
+        <div style={{ maxWidth:"100%", padding:"0 16px 40px" }}>
+
+          {/* CÓMO FUNCIONA */}
+          <div style={{ marginBottom:48 }}>
+            <div style={{ textAlign:"center", marginBottom:28 }}>
+              <div style={{ display:"inline-block", background:"#1e1e2e", border:"1px solid #6366f133", borderRadius:999, padding:"4px 14px", fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:1.2, textTransform:"uppercase", marginBottom:10 }}>¿Cómo funciona?</div>
+              <h2 style={{ fontSize:"clamp(20px,4vw,32px)", fontWeight:800, margin:0, letterSpacing:-0.5 }}>Simple y rápido</h2>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:14 }}>
+              {[
+                { n:"1", icon:"💬", title:"Contáctanos", desc:"Escríbenos por Telegram o WhatsApp y elige tu plan." },
+                { n:"2", icon:"💳", title:"Realiza tu pago", desc:"Paga de forma segura y recibe tus credenciales al instante." },
+                { n:"3", icon:"🔑", title:"Activa tu key", desc:"Ingresa tu key en la web y accede a tu cuenta asignada." },
+                { n:"4", icon:"🎬", title:"Disfruta", desc:"Mira tu contenido favorito sin interrupciones ni anuncios." },
+              ].map(s=>(
+                <div key={s.n} style={{ background:"#0f0f1a", border:"1px solid #ffffff0e", borderRadius:16, padding:20, position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:-10, right:-10, fontSize:60, opacity:0.04, fontWeight:900 }}>{s.n}</div>
+                  <div style={{ fontSize:28, marginBottom:10 }}>{s.icon}</div>
+                  <div style={{ fontWeight:700, fontSize:14, marginBottom:6 }}>{s.title}</div>
+                  <div style={{ fontSize:12, color:"#6b7280", lineHeight:1.6 }}>{s.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* PRECIOS */}
+          <div style={{ marginBottom:48 }}>
+            <div style={{ textAlign:"center", marginBottom:28 }}>
+              <div style={{ display:"inline-block", background:"#1e1e2e", border:"1px solid #6366f133", borderRadius:999, padding:"4px 14px", fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:1.2, textTransform:"uppercase", marginBottom:10 }}>Precios</div>
+              <h2 style={{ fontSize:"clamp(20px,4vw,32px)", fontWeight:800, margin:"0 0 6px", letterSpacing:-0.5 }}>Planes accesibles</h2>
+              <p style={{ color:"#6b7280", fontSize:14, margin:0 }}>Acceso a todas las plataformas disponibles</p>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14, maxWidth:800, margin:"0 auto" }}>
+              {[
+                { plan:"1 Mes", precio:"S/. 10", tag:null, color:"#6366f1", desc:"Perfecto para probar el servicio", features:["Acceso completo", "1 cuenta asignada", "Soporte por Telegram"] },
+                { plan:"3 Meses", precio:"S/. 30", tag:"Más popular", color:"#a855f7", desc:"El plan favorito de nuestros clientes", features:["Acceso completo", "1 cuenta asignada", "Soporte prioritario", "Renovación garantizada"] },
+                { plan:"6 Meses", precio:"S/. 60", tag:"Mejor precio", color:"#ec4899", desc:"Ahorra más con el plan completo", features:["Acceso completo", "1 cuenta asignada", "Soporte VIP 24/7", "Renovación garantizada", "Precio por mes más bajo"] },
+              ].map(p=>(
+                <div key={p.plan} style={{ background:"#0f0f1a", border:`1px solid ${p.color}44`, borderRadius:18, padding:22, position:"relative", overflow:"hidden" }}>
+                  {p.tag&&<div style={{ position:"absolute", top:14, right:14, background:`linear-gradient(135deg,${p.color},${p.color}88)`, borderRadius:999, padding:"2px 10px", fontSize:10, fontWeight:700, color:"#fff" }}>{p.tag}</div>}
+                  <div style={{ position:"absolute", top:-20, left:-20, width:80, height:80, borderRadius:"50%", background:p.color, opacity:0.08 }}/>
+                  <div style={{ fontSize:13, fontWeight:600, color:p.color, marginBottom:4 }}>{p.plan}</div>
+                  <div style={{ fontSize:32, fontWeight:900, marginBottom:4, letterSpacing:-1 }}>{p.precio}</div>
+                  <div style={{ fontSize:11, color:"#6b7280", marginBottom:14 }}>{p.desc}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:18 }}>
+                    {p.features.map(f=><div key={f} style={{ display:"flex", alignItems:"center", gap:7, fontSize:12, color:"#d1d5db" }}><Check size={12} color={p.color}/>{f}</div>)}
+                  </div>
+                  <Btn onClick={()=>window.open(`https://wa.me/51901815489?text=Hola! Quiero el plan de ${p.plan} por ${p.precio}`, "_blank")} style={{ width:"100%", justifyContent:"center", background:`linear-gradient(135deg,${p.color},${p.color}88)`, border:"none", fontSize:13 }}>
+                    Contratar ahora
+                  </Btn>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TESTIMONIOS */}
+          <div style={{ marginBottom:48 }}>
+            <div style={{ textAlign:"center", marginBottom:28 }}>
+              <div style={{ display:"inline-block", background:"#1e1e2e", border:"1px solid #6366f133", borderRadius:999, padding:"4px 14px", fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:1.2, textTransform:"uppercase", marginBottom:10 }}>Testimonios</div>
+              <h2 style={{ fontSize:"clamp(20px,4vw,32px)", fontWeight:800, margin:0, letterSpacing:-0.5 }}>Lo que dicen nuestros clientes</h2>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
+              {[
+                { nombre:"Carlos M.", plat:"Netflix", texto:"Increíble servicio, recibí mi cuenta en minutos. Ya llevo 3 meses y todo perfecto.", stars:5 },
+                { nombre:"Ana R.", plat:"Spotify", texto:"Muy fácil de usar la web. La clave llegó rápido y funciona sin problemas.", stars:5 },
+                { nombre:"Luis P.", plat:"Disney+", texto:"Excelente precio y atención. El admin responde al instante por Telegram.", stars:5 },
+                { nombre:"María G.", plat:"Max", texto:"Ya voy por mi segundo mes. Recomendado 100% para quien quiere streaming barato.", stars:5 },
+              ].map((t,i)=>(
+                <div key={i} style={{ background:"#0f0f1a", border:"1px solid #ffffff0e", borderRadius:16, padding:18 }}>
+                  <div style={{ display:"flex", gap:2, marginBottom:10 }}>{[...Array(t.stars)].map((_,j)=><span key={j} style={{ color:"#fbbf24", fontSize:14 }}>★</span>)}</div>
+                  <p style={{ fontSize:13, color:"#d1d5db", lineHeight:1.65, margin:"0 0 14px", fontStyle:"italic" }}>"{t.texto}"</p>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#6366f1,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:13 }}>{t.nombre[0]}</div>
+                    <div><div style={{ fontSize:13, fontWeight:700 }}>{t.nombre}</div><div style={{ fontSize:11, color:"#6b7280" }}>Usuario de {t.plat}</div></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div style={{ marginBottom:48, maxWidth:700, margin:"0 auto 48px" }}>
+            <div style={{ textAlign:"center", marginBottom:28 }}>
+              <div style={{ display:"inline-block", background:"#1e1e2e", border:"1px solid #6366f133", borderRadius:999, padding:"4px 14px", fontSize:11, fontWeight:700, color:"#a78bfa", letterSpacing:1.2, textTransform:"uppercase", marginBottom:10 }}>FAQ</div>
+              <h2 style={{ fontSize:"clamp(20px,4vw,32px)", fontWeight:800, margin:0, letterSpacing:-0.5 }}>Preguntas frecuentes</h2>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {[
+                { q:"¿Cómo recibo mi cuenta?", a:"Una vez que realizas el pago, te enviamos tus credenciales de acceso por Telegram o WhatsApp. Luego entras a la web, activas tu key y se te asigna una cuenta automáticamente." },
+                { q:"¿Las cuentas son compartidas?", a:"Las cuentas pueden ser compartidas con otros usuarios. Cada cliente recibe un perfil exclusivo dentro de la cuenta para evitar interferencias." },
+                { q:"¿Qué pasa si la cuenta deja de funcionar?", a:"Garantizamos el servicio durante todo tu plan. Si hay algún problema, te reemplazamos la cuenta sin costo adicional." },
+                { q:"¿Puedo usarlo en mi celular y TV?", a:"Sí, puedes usar las credenciales en cualquier dispositivo: celular, tablet, computadora o smart TV." },
+                { q:"¿Cómo renuevo mi plan?", a:"Simplemente contáctanos por Telegram o WhatsApp antes de que venza tu plan y te generamos una nueva key de acceso." },
+                { q:"¿Cuáles son los métodos de pago?", a:"Aceptamos transferencias bancarias, Yape, Plin y otros métodos de pago disponibles en Perú. Contáctanos para más detalles." },
+              ].map((f,i)=>(
+                <details key={i} style={{ background:"#0f0f1a", border:"1px solid #ffffff0e", borderRadius:12, overflow:"hidden" }}>
+                  <summary style={{ padding:"14px 16px", fontWeight:600, fontSize:14, cursor:"pointer", listStyle:"none", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    {f.q} <span style={{ color:"#6366f1", fontSize:18 }}>+</span>
+                  </summary>
+                  <div style={{ padding:"0 16px 14px", fontSize:13, color:"#9ca3af", lineHeight:1.7 }}>{f.a}</div>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTACTO */}
+          <div style={{ background:"linear-gradient(135deg,#1a0a2e,#0c1a3a)", border:"1px solid #6366f133", borderRadius:20, padding:28, textAlign:"center", maxWidth:600, margin:"0 auto" }}>
+            <div style={{ fontSize:32, marginBottom:10 }}>💬</div>
+            <h2 style={{ fontSize:22, fontWeight:800, margin:"0 0 8px" }}>¿Tienes alguna duda?</h2>
+            <p style={{ color:"#9ca3af", fontSize:14, margin:"0 0 20px" }}>Estamos disponibles para ayudarte por Telegram y WhatsApp</p>
+            <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+              <Btn onClick={()=>window.open("https://t.me/alex_eren","_blank")} style={{ background:"linear-gradient(135deg,#0088cc,#006699)", border:"none" }}>
+                <Send size={14}/> Telegram @alex_eren
+              </Btn>
+              <Btn onClick={()=>window.open("https://wa.me/51901815489","_blank")} style={{ background:"linear-gradient(135deg,#25D366,#128C7E)", border:"none" }}>
+                <Send size={14}/> WhatsApp
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`*{box-sizing:border-box}input::placeholder{color:#4b5563}select option{background:#0f0f1a}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#080810}::-webkit-scrollbar-thumb{background:#ffffff1a;border-radius:3px}details summary::-webkit-details-marker{display:none}`}</style>
     </div>
   );
 }
