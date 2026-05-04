@@ -202,6 +202,18 @@ export default function StreamVault() {
   // Ticket
   const [newTicket,   setNewTicket]   = useState({asunto:"",mensaje:""});
 
+  // ── Estados faltantes (payments, ratings, notifications, pay modal, rating modal) ──
+  const [notifications,  setNotifications]  = useState([]);
+  const [payments,       setPayments]       = useState([]);
+  const [ratings,        setRatings]        = useState([]);
+  const [payModal,       setPayModal]       = useState(null);
+  const [payCaptura,     setPayCaptura]     = useState(null);
+  const [payStep,        setPayStep]        = useState(1);
+  const [payUploading,   setPayUploading]   = useState(false);
+  const [ratingModal,    setRatingModal]    = useState(null);
+  const [ratingComment,  setRatingComment]  = useState("");
+  const [ratingVal,      setRatingVal]      = useState(5);
+
   // Chat
   const [chatMsg,     setChatMsg]     = useState("");
   const [chatOpen,    setChatOpen]    = useState(false);
@@ -229,6 +241,8 @@ export default function StreamVault() {
     u.push(onSnapshot(collection(db,"chats"),    s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)); setChats(r); }));
     u.push(onSnapshot(collection(db,"ofertas"),  s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.creadaEn||0)-(a.creadaEn||0)); setOfertas(r); }));
     u.push(onSnapshot(collection(db,"discounts"),s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); setDiscounts(r); }));
+    u.push(onSnapshot(collection(db,"payments"), s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)); setPayments(r); }));
+    u.push(onSnapshot(collection(db,"ratings"),  s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)); setRatings(r); }));
     u.push(onSnapshot(doc(db,"config","settings"),s=>{ if(s.exists()) setSettings(s.data()); }));
     u.push(onSnapshot(doc(db,"config","status"),  s=>{ if(s.exists()) setServiceStatus(s.data()); }));
     setLoading(false);
@@ -477,88 +491,6 @@ export default function StreamVault() {
     const d={id:Date.now(),...newDiscount,codigo:newDiscount.codigo.toUpperCase(),activo:true,creadoEn:Date.now()};
     await setDoc(doc(db,"discounts",String(d.id)),d);
     setNewDiscount({codigo:"",tipo:"porcentaje",valor:10,descripcion:""}); toast("Código creado ✅");
-  }
-
-  // ── Check expiring keys (3 days) ──
-  useEffect(() => {
-    if (!clientUser) return;
-    const userKeys = clientUser.keys || [];
-    const notifs = [];
-    userKeys.forEach(k => {
-      if (!k.expiraEn || k.usada) return;
-      const diff = new Date(k.expiraEn) - new Date();
-      const days = Math.ceil(diff / 86400000);
-      if (days <= 3 && days > 0) {
-        const platName = PLATFORMS.find(p=>p.id===k.plataforma)?.name || k.plataforma;
-        notifs.push({ id: k.codigo, msg: "Tu acceso a " + platName + " vence en " + days + " dia" + (days!==1?"s":""), type: 'warn', plat: k.plataforma });
-      }
-    });
-    setNotifications(notifs);
-  }, [clientUser]);
-
-  // ── Payments ──
-  async function submitPayment() {
-    if (!payCaptura || !payModal || !clientUser) return;
-    setPayUploading(true);
-    const payment = {
-      id: Date.now(),
-      clienteEmail: clientUser.email,
-      clienteNombre: clientUser.nombre,
-      clienteId: clientUser.id,
-      plan: payModal.plan,
-      meses: payModal.meses,
-      precio: payModal.precio,
-      captura: payCaptura,
-      estado: 'pendiente',
-      timestamp: Date.now(),
-      fecha: new Date().toLocaleString('es-PE'),
-    };
-    await setDoc(doc(db, 'payments', String(payment.id)), payment);
-    await pushNotify(
-      "Nuevo pago de " + (clientUser?.nombre||"cliente"),
-      "Plan: " + (payModal?.plan||"") + " - " + (payModal?.precio||"") + " - Revisa el panel admin para aprobar."
-    );
-    setPayStep(3);
-    setPayUploading(false);
-  }
-
-  async function approvePayment(payment) {
-    // Generate key for the user automatically
-    const plat = 'netflix'; // default, admin can change
-    const dur = payment.meses === 1 ? '30d' : payment.meses === 3 ? '90d' : '180d';
-    await updateDoc(doc(db, 'payments', String(payment.id)), { estado: 'aprobado', aprobadoEn: new Date().toISOString() });
-    // Add to client history
-    const user = users.find(u => u.id === payment.clienteId);
-    if (user) {
-      const hist = user.pagos || [];
-      await updateDoc(doc(db, 'users', payment.clienteId), {
-        pagos: [...hist, { plan: payment.plan, precio: payment.precio, fecha: payment.fecha, estado: 'aprobado' }]
-      });
-    }
-    toast();
-  }
-
-  async function rejectPayment(id) {
-    await updateDoc(doc(db, 'payments', String(id)), { estado: 'rechazado' });
-    toast('Pago rechazado');
-  }
-
-  // ── Ratings ──
-  async function submitRating() {
-    if (!ratingModal || !clientUser) return;
-    const r = {
-      id: Date.now(),
-      plataforma: ratingModal,
-      clienteNombre: clientUser.nombre,
-      clienteId: clientUser.id,
-      estrellas: ratingVal,
-      comentario: ratingComment,
-      fecha: new Date().toLocaleDateString('es-PE'),
-      timestamp: Date.now(),
-    };
-    await setDoc(doc(db, 'ratings', String(r.id)), r);
-    setRatingModal(null); setRatingComment(''); setRatingVal(5);
-    toast('¡Gracias por tu calificación! ⭐');
   }
 
   // ── Check expiring keys (3 days) ──
@@ -1197,7 +1129,6 @@ export default function StreamVault() {
                     </div>
                   </div>
                   <Btn variant="danger" small onClick={()=>cerrarSesionPlat(activePlat)}><LogOut size={12}/> Cerrar sesión</Btn>
-                  <Btn variant="amber" small onClick={()=>setRatingModal(activePlat)}><Star size={12}/> Calificar</Btn>
                   <Btn variant="amber" small onClick={()=>setRatingModal(activePlat)}><Star size={12}/> Calificar</Btn>
                 </div>
               </div>
