@@ -515,8 +515,8 @@ export default function StreamVault() {
     };
     await setDoc(doc(db, 'payments', String(payment.id)), payment);
     await pushNotify(
-      ,
-      
+      "Nuevo pago de " + (clientUser?.nombre||"cliente"),
+      "Plan: " + (payModal?.plan||"") + " - " + (payModal?.precio||"") + " - Revisa el panel admin para aprobar."
     );
     setPayStep(3);
     setPayUploading(false);
