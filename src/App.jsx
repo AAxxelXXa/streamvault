@@ -479,6 +479,165 @@ export default function StreamVault() {
     setNewDiscount({codigo:"",tipo:"porcentaje",valor:10,descripcion:""}); toast("Código creado ✅");
   }
 
+  // ── Check expiring keys (3 days) ──
+  useEffect(() => {
+    if (!clientUser) return;
+    const userKeys = clientUser.keys || [];
+    const notifs = [];
+    userKeys.forEach(k => {
+      if (!k.expiraEn || k.usada) return;
+      const diff = new Date(k.expiraEn) - new Date();
+      const days = Math.ceil(diff / 86400000);
+      if (days <= 3 && days > 0) {
+        notifs.push({ id: k.codigo, msg: , type: 'warn', plat: k.plataforma });
+      }
+    });
+    setNotifications(notifs);
+  }, [clientUser]);
+
+  // ── Payments ──
+  async function submitPayment() {
+    if (!payCaptura || !payModal || !clientUser) return;
+    setPayUploading(true);
+    const payment = {
+      id: Date.now(),
+      clienteEmail: clientUser.email,
+      clienteNombre: clientUser.nombre,
+      clienteId: clientUser.id,
+      plan: payModal.plan,
+      meses: payModal.meses,
+      precio: payModal.precio,
+      captura: payCaptura,
+      estado: 'pendiente',
+      timestamp: Date.now(),
+      fecha: new Date().toLocaleString('es-PE'),
+    };
+    await setDoc(doc(db, 'payments', String(payment.id)), payment);
+    await pushNotify(
+      ,
+      
+    );
+    setPayStep(3);
+    setPayUploading(false);
+  }
+
+  async function approvePayment(payment) {
+    // Generate key for the user automatically
+    const plat = 'netflix'; // default, admin can change
+    const dur = payment.meses === 1 ? '30d' : payment.meses === 3 ? '90d' : '180d';
+    await updateDoc(doc(db, 'payments', String(payment.id)), { estado: 'aprobado', aprobadoEn: new Date().toISOString() });
+    // Add to client history
+    const user = users.find(u => u.id === payment.clienteId);
+    if (user) {
+      const hist = user.pagos || [];
+      await updateDoc(doc(db, 'users', payment.clienteId), {
+        pagos: [...hist, { plan: payment.plan, precio: payment.precio, fecha: payment.fecha, estado: 'aprobado' }]
+      });
+    }
+    toast();
+  }
+
+  async function rejectPayment(id) {
+    await updateDoc(doc(db, 'payments', String(id)), { estado: 'rechazado' });
+    toast('Pago rechazado');
+  }
+
+  // ── Ratings ──
+  async function submitRating() {
+    if (!ratingModal || !clientUser) return;
+    const r = {
+      id: Date.now(),
+      plataforma: ratingModal,
+      clienteNombre: clientUser.nombre,
+      clienteId: clientUser.id,
+      estrellas: ratingVal,
+      comentario: ratingComment,
+      fecha: new Date().toLocaleDateString('es-PE'),
+      timestamp: Date.now(),
+    };
+    await setDoc(doc(db, 'ratings', String(r.id)), r);
+    setRatingModal(null); setRatingComment(''); setRatingVal(5);
+    toast('¡Gracias por tu calificación! ⭐');
+  }
+
+  // ── Check expiring keys (3 days) ──
+  useEffect(() => {
+    if (!clientUser) return;
+    const userKeys = clientUser.keys || [];
+    const notifs = [];
+    userKeys.forEach(k => {
+      if (!k.expiraEn) return;
+      const diff = new Date(k.expiraEn) - new Date();
+      const days = Math.ceil(diff / 86400000);
+      if (days <= 3 && days > 0) {
+        const platName = PLATFORMS.find(p=>p.id===k.plataforma)?.name || k.plataforma;
+        notifs.push({ id: k.codigo, msg: `Tu acceso a ${platName} vence en ${days} día${days!==1?"s":""}`, type: "warn", plat: k.plataforma });
+      }
+    });
+    setNotifications(notifs);
+  }, [clientUser]);
+
+  // ── Payments ──
+  async function submitPayment() {
+    if (!payCaptura || !payModal || !clientUser) return;
+    setPayUploading(true);
+    const payment = {
+      id: Date.now(),
+      clienteEmail: clientUser.email,
+      clienteNombre: clientUser.nombre,
+      clienteId: clientUser.id,
+      plan: payModal.plan,
+      meses: payModal.meses,
+      precio: payModal.precio,
+      captura: payCaptura,
+      estado: "pendiente",
+      timestamp: Date.now(),
+      fecha: new Date().toLocaleString("es-PE"),
+    };
+    await setDoc(doc(db, "payments", String(payment.id)), payment);
+    await pushNotify(
+      "Nuevo pago de " + clientUser.nombre,
+      "Plan: " + payModal.plan + " (" + payModal.precio + ") - Revisa el panel admin para aprobar."
+    );
+    setPayStep(3);
+    setPayUploading(false);
+  }
+
+  async function approvePayment(payment) {
+    await updateDoc(doc(db, "payments", String(payment.id)), { estado: "aprobado", aprobadoEn: new Date().toISOString() });
+    const user = users.find(u => u.id === payment.clienteId);
+    if (user) {
+      const hist = user.pagos || [];
+      await updateDoc(doc(db, "users", payment.clienteId), {
+        pagos: [...hist, { plan: payment.plan, precio: payment.precio, fecha: payment.fecha, estado: "aprobado" }]
+      });
+    }
+    toast("Pago de " + payment.clienteNombre + " aprobado ✅");
+  }
+
+  async function rejectPayment(id) {
+    await updateDoc(doc(db, "payments", String(id)), { estado: "rechazado" });
+    toast("Pago rechazado");
+  }
+
+  // ── Ratings ──
+  async function submitRating() {
+    if (!ratingModal || !clientUser) return;
+    const r = {
+      id: Date.now(),
+      plataforma: ratingModal,
+      clienteNombre: clientUser.nombre,
+      clienteId: clientUser.id,
+      estrellas: ratingVal,
+      comentario: ratingComment,
+      fecha: new Date().toLocaleDateString("es-PE"),
+      timestamp: Date.now(),
+    };
+    await setDoc(doc(db, "ratings", String(r.id)), r);
+    setRatingModal(null); setRatingComment(""); setRatingVal(5);
+    toast("Gracias por tu calificacion! Estrellas: " + ratingVal);
+  }
+
   // ── Service status ──
   async function updateStatus() {
     await setDoc(doc(db,"config","status"),newStatus);
@@ -532,6 +691,19 @@ export default function StreamVault() {
               {o.descripcion&&<span style={{fontWeight:400,opacity:0.9}}> — {o.descripcion}</span>}
               {o.endsAt&&countdown[o.id]&&<span style={{background:"#ffffff22",borderRadius:6,padding:"1px 8px",marginLeft:8}}><Clock size={10}/> {countdown[o.id]}</span>}
             </span>
+          ))}
+        </div>
+      )}
+
+      {/* Notificaciones de vencimiento */}
+      {(view==="home"||view==="platform")&&clientUser&&notifications.length>0&&(
+        <div style={{background:"#1a0f00",borderBottom:"1px solid #78350f",padding:"8px 16px",display:"flex",flexDirection:"column",gap:4}}>
+          {notifications.map(n=>(
+            <div key={n.id} style={{display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#fbbf24"}}>
+              <AlertTriangle size={12}/>
+              <span>{n.msg}</span>
+              <button onClick={()=>{ setPayModal({plan:"Renovacion",meses:1,precio:"S/. 10"}); setPayStep(1); setPayCaptura(null); }} style={{background:"#78350f",border:"none",borderRadius:6,padding:"2px 8px",color:"#fbbf24",cursor:"pointer",fontSize:11,marginLeft:"auto"}}>Renovar ahora</button>
+            </div>
           ))}
         </div>
       )}
@@ -711,6 +883,67 @@ export default function StreamVault() {
             )}
           </div>
 
+          {/* Historial de pagos */}
+          <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:20,marginBottom:16}}>
+            <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>💰 Historial de pagos</h3>
+            {(clientUser?.pagos||[]).length===0?(
+              <div style={{textAlign:"center",color:subText,fontSize:13,padding:"16px 0"}}>
+                Sin pagos registrados
+                <div style={{marginTop:12}}>
+                  <Btn small onClick={()=>{ setPayModal({plan:"1 Mes",meses:1,precio:"S/. 10"}); setPayStep(1); setPayCaptura(null); setModal(null); setView("home"); }}>
+                    💳 Realizar pago
+                  </Btn>
+                </div>
+              </div>
+            ):(
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {(clientUser.pagos||[]).map((p,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${borderColor}`}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:textColor}}>{p.plan}</div>
+                      <div style={{fontSize:11,color:subText}}>{p.fecha}</div>
+                    </div>
+                    <span style={{fontSize:14,fontWeight:700,color:"#4ade80"}}>{p.precio}</span>
+                    <Badge color={p.estado==="aprobado"?"green":"amber"} dot>{p.estado}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Historial de pagos */}
+          {(clientUser?.pagos||[]).length>0&&(
+            <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:20,marginBottom:16}}>
+              <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>💰 Historial de pagos</h3>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {(clientUser?.pagos||[]).map((p,i)=>(
+                  <div key={i} style={{background:darkMode?"#080812":"#f0f2f8",borderRadius:10,padding:"10px 13px",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:600,fontSize:13,color:textColor}}>{p.plan}</div>
+                      <div style={{fontSize:11,color:subText}}>{p.fecha}</div>
+                    </div>
+                    <div style={{fontWeight:700,fontSize:14,color:"#4ade80"}}>{p.precio}</div>
+                    <Badge color={p.estado==="aprobado"?"green":"amber"} dot>{p.estado}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Renovar plan */}
+          <div style={{background:darkMode?"linear-gradient(135deg,#1a0a2e,#0c1a3a)":"linear-gradient(135deg,#e0e7ff,#f0f4ff)",border:"1px solid #6366f133",borderRadius:16,padding:20,marginBottom:16,textAlign:"center"}}>
+            <div style={{fontSize:28,marginBottom:8}}>🔄</div>
+            <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 6px",color:textColor}}>Renovar mi plan</h3>
+            <p style={{color:subText,fontSize:12,margin:"0 0 12px"}}>Elige tu plan y paga con Yape directamente aquí</p>
+            <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+              {[{plan:"1 Mes",meses:1,precio:"S/. 10"},{plan:"3 Meses",meses:3,precio:"S/. 30"},{plan:"6 Meses",meses:6,precio:"S/. 60"}].map(p=>(
+                <Btn key={p.plan} small onClick={()=>{ setPayModal(p); setPayStep(1); setPayCaptura(null); }} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none"}}>
+                  {p.plan} — {p.precio}
+                </Btn>
+              ))}
+            </div>
+          </div>
+
           {/* Código de descuento */}
           <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:20}}>
             <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>🏷️ Código de descuento</h3>
@@ -808,7 +1041,7 @@ export default function StreamVault() {
               <p style={{color:subText,fontSize:14,margin:0}}>Acceso a todas las plataformas disponibles</p>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14,maxWidth:800,margin:"0 auto"}}>
-              {[{plan:"1 Mes",precio:"S/. 10",tag:null,color:"#6366f1",desc:"Perfecto para probar",features:["Acceso completo","1 cuenta asignada","Soporte por Telegram"]},{plan:"3 Meses",precio:"S/. 30",tag:"Más popular",color:"#a855f7",desc:"El favorito de nuestros clientes",features:["Acceso completo","1 cuenta asignada","Soporte prioritario","Renovación garantizada"]},{plan:"6 Meses",precio:"S/. 60",tag:"Mejor precio",color:"#ec4899",desc:"Ahorra más con este plan",features:["Acceso completo","1 cuenta asignada","Soporte VIP 24/7","Renovación garantizada","Menor precio por mes"]}].map(p=>(
+              {[{plan:"1 Mes",meses:1,precio:"S/. 10",tag:null,color:"#6366f1",desc:"Perfecto para probar",features:["Acceso completo","1 cuenta asignada","Soporte por Telegram"]},{plan:"3 Meses",meses:3,precio:"S/. 30",tag:"Más popular",color:"#a855f7",desc:"El favorito de nuestros clientes",features:["Acceso completo","1 cuenta asignada","Soporte prioritario","Renovación garantizada"]},{plan:"6 Meses",meses:6,precio:"S/. 60",tag:"Mejor precio",color:"#ec4899",desc:"Ahorra más con este plan",features:["Acceso completo","1 cuenta asignada","Soporte VIP 24/7","Renovación garantizada","Menor precio por mes"]}].map(p=>(
                 <div key={p.plan} style={{background:cardBg,border:`1px solid ${p.color}44`,borderRadius:18,padding:22,position:"relative",overflow:"hidden"}}>
                   {p.tag&&<div style={{position:"absolute",top:14,right:14,background:`linear-gradient(135deg,${p.color},${p.color}88)`,borderRadius:999,padding:"2px 10px",fontSize:10,fontWeight:700,color:"#fff"}}>{p.tag}</div>}
                   <div style={{position:"absolute",top:-20,left:-20,width:80,height:80,borderRadius:"50%",background:p.color,opacity:0.08}}/>
@@ -818,7 +1051,7 @@ export default function StreamVault() {
                   <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
                     {p.features.map(f=><div key={f} style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:textColor}}><Check size={12} color={p.color}/>{f}</div>)}
                   </div>
-                  <Btn onClick={()=>window.open(`https://wa.me/51901815489?text=Hola! Quiero el plan ${p.plan} por ${p.precio}`,"_blank")} style={{width:"100%",justifyContent:"center",background:`linear-gradient(135deg,${p.color},${p.color}88)`,border:"none",fontSize:13}}>Contratar ahora</Btn>
+                  <Btn onClick={()=>{ setPayModal({plan:p.plan,meses:p.meses,precio:p.precio}); setPayStep(1); setPayCaptura(null); }} style={{width:"100%",justifyContent:"center",background:`linear-gradient(135deg,${p.color},${p.color}88)`,border:"none",fontSize:13}}>💳 Pagar con Yape</Btn>
                 </div>
               ))}
             </div>
@@ -963,6 +1196,8 @@ export default function StreamVault() {
                     </div>
                   </div>
                   <Btn variant="danger" small onClick={()=>cerrarSesionPlat(activePlat)}><LogOut size={12}/> Cerrar sesión</Btn>
+                  <Btn variant="amber" small onClick={()=>setRatingModal(activePlat)}><Star size={12}/> Calificar</Btn>
+                  <Btn variant="amber" small onClick={()=>setRatingModal(activePlat)}><Star size={12}/> Calificar</Btn>
                 </div>
               </div>
               {activeSession.cuenta?(
@@ -1022,7 +1257,13 @@ export default function StreamVault() {
                 <div><div style={{fontSize:13,fontWeight:700,color:"#60a5fa"}}>¿Tienes algún problema?</div><div style={{fontSize:11,color:subText}}>Contacta al administrador</div></div>
                 <Btn variant="ghost" onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{border:"1px solid #1e3a8a",color:"#60a5fa"}} small><Send size={12}/> @alex_eren</Btn>
               </div>
-              <button onClick={()=>setView("home")} style={{background:"none",border:"none",color:subText,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:4}}>← Volver al inicio</button>
+              <div style={{display:"flex",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                  <button onClick={()=>setView("home")} style={{background:"none",border:"none",color:subText,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:4}}>← Volver al inicio</button>
+                  <Btn small variant="amber" onClick={()=>setRatingModal(activePlat)}><Star size={12}/> Calificar</Btn>
+                </div>
+                <Btn small variant="amber" onClick={()=>setRatingModal(activePlat)} style={{marginLeft:"auto"}}><Star size={12}/> Calificar servicio</Btn>
+              </div>
             </>
           ):(
             <div style={{textAlign:"center",padding:"60px 16px"}}>
@@ -1046,9 +1287,9 @@ export default function StreamVault() {
               <Badge color="purple">Admin</Badge>
             </div>
             <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-              {["accounts","users","keys","tickets","chat","ofertas","discounts","status","granted","settings"].map(t=>(
+              {["accounts","users","keys","payments","tickets","chat","ofertas","discounts","status","granted","analytics","settings"].map(t=>(
                 <button key={t} onClick={()=>setAdminTab(t)} style={{background:adminTab===t?"#1e1e2e":"transparent",border:`1px solid ${borderColor}`,borderRadius:9,color:"#c4b5fd",padding:"5px 10px",cursor:"pointer",fontSize:11,fontWeight:600,position:"relative"}}>
-                  {t==="accounts"?"Cuentas":t==="users"?"Usuarios":t==="keys"?"Keys":t==="tickets"?"Tickets":t==="chat"?"Chat":t==="ofertas"?"Ofertas":t==="discounts"?"Descuentos":t==="status"?"Estado":t==="granted"?"Otorgadas":"Config"}
+                  {t==="accounts"?"Cuentas":t==="users"?"Usuarios":t==="keys"?"Keys":t==="payments"?"Pagos":t==="tickets"?"Tickets":t==="chat"?"Chat":t==="ofertas"?"Ofertas":t==="discounts"?"Descuentos":t==="status"?"Estado":t==="granted"?"Otorgadas":t==="analytics"?"Analytics":"Config"}
                   {t==="tickets"&&openTickets.length>0&&<span style={{position:"absolute",top:-4,right:-4,width:8,height:8,borderRadius:"50%",background:"#f87171"}}/>}
                   {t==="chat"&&chats.filter(c=>c.de!=="admin").length>0&&<span style={{position:"absolute",top:-4,right:-4,width:8,height:8,borderRadius:"50%",background:"#6366f1"}}/>}
                 </button>
@@ -1197,6 +1438,127 @@ export default function StreamVault() {
                     <input value={chatMsg} onChange={e=>setChatMsg(e.target.value)} placeholder="Escribe tu respuesta..." style={{flex:1,background:darkMode?"#080812":"#f0f2f8",border:`1px solid ${borderColor}`,borderRadius:10,padding:"10px 13px",color:textColor,fontSize:13,outline:"none"}}/>
                     <Btn type="submit"><Send size={13}/> Enviar</Btn>
                   </form>
+                </div>
+              </>
+            )}
+
+            {/* PAGOS */}
+            {adminTab==="payments"&&(
+              <>
+                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2><p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p></div>
+                {payments.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin pagos registrados</div>:(
+                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                    {payments.map(p=>(
+                      <div key={p.id} style={{background:cardBg,border:`1px solid ${p.estado==="pendiente"?"#1e3a8a":p.estado==="aprobado"?"#166534":"#7f1d1d"}`,borderRadius:14,padding:16}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:10}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:700,fontSize:14,color:textColor}}>{p.clienteNombre}</div>
+                            <div style={{fontSize:12,color:subText}}>{p.clienteEmail} · {p.plan} · {p.precio} · {p.fecha}</div>
+                          </div>
+                          <Badge color={p.estado==="pendiente"?"blue":p.estado==="aprobado"?"green":"red"} dot>{p.estado}</Badge>
+                          {p.estado==="pendiente"&&(
+                            <div style={{display:"flex",gap:6}}>
+                              <Btn small variant="success" onClick={()=>approvePayment(p)}><Check size={11}/> Aprobar</Btn>
+                              <Btn small variant="danger" onClick={()=>rejectPayment(p.id)}><X size={11}/> Rechazar</Btn>
+                            </div>
+                          )}
+                          <button onClick={()=>deleteDoc(doc(db,"payments",String(p.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={13}/></button>
+                        </div>
+                        {p.captura&&(
+                          <div style={{marginTop:8}}>
+                            <div style={{fontSize:11,color:subText,marginBottom:6}}>Comprobante de pago:</div>
+                            <img src={p.captura} alt="comprobante" style={{maxWidth:"100%",maxHeight:200,borderRadius:10,objectFit:"contain",border:"1px solid " + borderColor}}/>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ANALYTICS */}
+            {adminTab==="analytics"&&(
+              <>
+                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Analytics</h2><p style={{color:subText,margin:0,fontSize:12}}>Resumen del negocio</p></div>
+                {/* KPIs */}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:24}}>
+                  {[
+                    {label:"Usuarios totales",value:users.length,color:"#6366f1",icon:"👥"},
+                    {label:"Usuarios activos",value:users.filter(u=>u.activo!==false).length,color:"#1DB954",icon:"✅"},
+                    {label:"Cuentas disponibles",value:availableAcc,color:"#3b5bdb",icon:"💳"},
+                    {label:"Keys activas",value:activeKeys.length,color:"#a855f7",icon:"🔑"},
+                    {label:"Pagos aprobados",value:payments.filter(p=>p.estado==="aprobado").length,color:"#4ade80",icon:"💰"},
+                    {label:"Pagos pendientes",value:payments.filter(p=>p.estado==="pendiente").length,color:"#fbbf24",icon:"⏳"},
+                    {label:"Tickets abiertos",value:openTickets.length,color:"#f87171",icon:"🎫"},
+                    {label:"Calificacion prom",value:(ratings.length>0?(ratings.reduce((a,r)=>a+r.estrellas,0)/ratings.length).toFixed(1):"N/A"),color:"#fbbf24",icon:"⭐"},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:cardBg,border:`1px solid ${s.color}33`,borderRadius:14,padding:"14px 16px",textAlign:"center"}}>
+                      <div style={{fontSize:22,marginBottom:4}}>{s.icon}</div>
+                      <div style={{fontSize:26,fontWeight:900,color:s.color,letterSpacing:-1}}>{s.value}</div>
+                      <div style={{fontSize:10,color:subText,marginTop:2}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Ingresos estimados */}
+                <div style={{background:cardBg,border:"1px solid #6366f133",borderRadius:16,padding:20,marginBottom:16}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>💰 Ingresos estimados</h3>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
+                    {[
+                      {label:"Pagos aprobados",value:"S/. " + payments.filter(p=>p.estado==="aprobado").reduce((a,p)=>a+parseInt(p.precio.replace("S/. ","")||0),0)},
+                      {label:"Pendientes",value:"S/. " + payments.filter(p=>p.estado==="pendiente").reduce((a,p)=>a+parseInt(p.precio.replace("S/. ","")||0),0)},
+                      {label:"Total generado",value:"S/. " + payments.reduce((a,p)=>a+parseInt(p.precio.replace("S/. ","")||0),0)},
+                    ].map(s=>(
+                      <div key={s.label} style={{background:darkMode?"#080812":"#f0f2f8",borderRadius:12,padding:"12px 14px",textAlign:"center"}}>
+                        <div style={{fontSize:20,fontWeight:800,color:"#4ade80"}}>{s.value}</div>
+                        <div style={{fontSize:11,color:subText,marginTop:2}}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Plataformas más populares */}
+                <div style={{background:cardBg,border:"1px solid #6366f133",borderRadius:16,padding:20,marginBottom:16}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>📺 Plataformas más solicitadas</h3>
+                  {PLATFORMS.map(p=>{
+                    const count = granted.filter(g=>g.plataforma===p.id).length;
+                    const max = Math.max(...PLATFORMS.map(pl=>granted.filter(g=>g.plataforma===pl.id).length),1);
+                    return count>0?(
+                      <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                        <PlatformIcon id={p.id} size={24}/>
+                        <span style={{fontSize:13,color:textColor,minWidth:100}}>{p.name}</span>
+                        <div style={{flex:1,background:darkMode?"#1e1e2e":"#e5e7eb",borderRadius:999,height:8,overflow:"hidden"}}>
+                          <div style={{width:(count/max*100)+"%",background:`linear-gradient(90deg,${p.color},${p.color}88)`,height:"100%",borderRadius:999,transition:"width 0.5s"}}/>
+                        </div>
+                        <span style={{fontSize:12,color:subText,minWidth:30}}>{count}</span>
+                      </div>
+                    ):null;
+                  })}
+                  {granted.length===0&&<div style={{textAlign:"center",color:subText,fontSize:13}}>Sin datos aún</div>}
+                </div>
+                {/* Calificaciones */}
+                <div style={{background:cardBg,border:"1px solid #6366f133",borderRadius:16,padding:20}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>⭐ Calificaciones de clientes</h3>
+                  {ratings.length===0?<div style={{textAlign:"center",color:subText,fontSize:13}}>Sin calificaciones aún</div>:(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {ratings.slice(0,10).map(r=>{
+                        const plat=PLATFORMS.find(p=>p.id===r.plataforma);
+                        return (
+                          <div key={r.id} style={{background:darkMode?"#080812":"#f0f2f8",borderRadius:10,padding:"10px 13px",display:"flex",gap:10,alignItems:"flex-start"}}>
+                            <PlatformIcon id={r.plataforma} size={24}/>
+                            <div style={{flex:1}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                                <span style={{fontWeight:600,fontSize:13,color:textColor}}>{r.clienteNombre}</span>
+                                <span style={{fontSize:12,color:"#fbbf24"}}>{"⭐".repeat(r.estrellas)}</span>
+                                <span style={{fontSize:11,color:subText}}>{r.fecha}</span>
+                              </div>
+                              {r.comentario&&<div style={{fontSize:12,color:subText,fontStyle:"italic"}}>"{r.comentario}"</div>}
+                            </div>
+                            <button onClick={()=>deleteDoc(doc(db,"ratings",String(r.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={12}/></button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -1370,6 +1732,126 @@ export default function StreamVault() {
               </>
             )}
 
+            {/* PAGOS */}
+            {adminTab==="payments"&&(
+              <>
+                <div style={{marginBottom:20}}>
+                  <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2>
+                  <p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:18}}>
+                  {[
+                    {label:"Pendientes",value:payments.filter(p=>p.estado==="pendiente").length,color:"#fbbf24"},
+                    {label:"Aprobados",value:payments.filter(p=>p.estado==="aprobado").length,color:"#1DB954"},
+                    {label:"Rechazados",value:payments.filter(p=>p.estado==="rechazado").length,color:"#f87171"},
+                    {label:"Total S/.",value:payments.filter(p=>p.estado==="aprobado").reduce((sum,p)=>sum+parseInt(p.precio.replace("S/. ","")||0),0),color:"#6366f1"},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:cardBg,border:`1px solid ${s.color}33`,borderRadius:12,padding:"12px 14px"}}>
+                      <div style={{fontSize:22,fontWeight:800,color:s.color}}>{s.label==="Total S/."?"S/. "+s.value:s.value}</div>
+                      <div style={{fontSize:11,color:subText,marginTop:2}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {payments.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin pagos aún</div>:(
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {payments.map(pay=>(
+                      <div key={pay.id} style={{background:cardBg,border:`1px solid ${pay.estado==="pendiente"?"#78350f":pay.estado==="aprobado"?"#166534":"#7f1d1d"}`,borderRadius:14,padding:16}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:pay.captura?12:0}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:700,fontSize:14,color:textColor}}>{pay.clienteNombre}</div>
+                            <div style={{fontSize:12,color:subText}}>{pay.clienteEmail} · {pay.plan} · {pay.precio} · {pay.fecha}</div>
+                          </div>
+                          <Badge color={pay.estado==="pendiente"?"amber":pay.estado==="aprobado"?"green":"red"} dot>{pay.estado}</Badge>
+                          {pay.estado==="pendiente"&&(
+                            <div style={{display:"flex",gap:6}}>
+                              <Btn small variant="success" onClick={()=>approvePayment(pay)}><Check size={11}/> Aprobar</Btn>
+                              <Btn small variant="danger" onClick={()=>rejectPayment(pay.id)}><X size={11}/> Rechazar</Btn>
+                            </div>
+                          )}
+                          <button onClick={()=>deleteDoc(doc(db,"payments",String(pay.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={12}/></button>
+                        </div>
+                        {pay.captura&&(
+                          <div style={{marginTop:8}}>
+                            <div style={{fontSize:11,color:subText,marginBottom:6}}>Comprobante:</div>
+                            <img src={pay.captura} alt="comprobante" style={{maxWidth:200,maxHeight:150,borderRadius:8,objectFit:"contain",border:"1px solid "+borderColor,cursor:"pointer"}} onClick={()=>window.open(pay.captura,"_blank")}/>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ANALYTICS */}
+            {adminTab==="analytics"&&(
+              <>
+                <div style={{marginBottom:20}}>
+                  <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Analytics</h2>
+                  <p style={{color:subText,margin:0,fontSize:12}}>Resumen de tu negocio en tiempo real</p>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:24}}>
+                  {[
+                    {label:"Clientes activos",value:users.filter(u=>u.activo!==false).length,icon:"👥",color:"#6366f1"},
+                    {label:"Ingresos aprobados",value:"S/. "+payments.filter(p=>p.estado==="aprobado").reduce((s,p)=>s+parseInt(p.precio.replace("S/. ","")||0),0),icon:"💰",color:"#1DB954"},
+                    {label:"Keys activas",value:keys.filter(k=>!k.usada&&(!k.expiraEn||new Date()<new Date(k.expiraEn))).length,icon:"🔑",color:"#a855f7"},
+                    {label:"Cuentas disponibles",value:availableAcc,icon:"✅",color:"#00A8E1"},
+                    {label:"Tickets abiertos",value:tickets.filter(t=>t.estado==="abierto").length,icon:"🎫",color:"#f59e0b"},
+                    {label:"Calificación prom.",value:ratings.length>0?(ratings.reduce((s,r)=>s+r.estrellas,0)/ratings.length).toFixed(1)+"⭐":"—",icon:"⭐",color:"#fbbf24"},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:cardBg,border:`1px solid ${s.color}33`,borderRadius:14,padding:"16px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
+                      <div style={{fontSize:24,fontWeight:900,color:s.color,letterSpacing:-1}}>{s.value}</div>
+                      <div style={{fontSize:11,color:subText,marginTop:4}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plataformas más populares */}
+                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18,marginBottom:16}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>📊 Plataformas más solicitadas</h3>
+                  {PLATFORMS.map(p=>{
+                    const count=(accounts[p.id]||[]).length;
+                    const avail=(accounts[p.id]||[]).filter(a=>a.status==="disponible").length;
+                    const total=Object.values(accounts).flat().length||1;
+                    const pct=Math.round((count/total)*100);
+                    return (
+                      <div key={p.id} style={{marginBottom:10}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                          <PlatformIcon id={p.id} size={20}/>
+                          <span style={{fontSize:12,fontWeight:600,flex:1,color:textColor}}>{p.name}</span>
+                          <span style={{fontSize:11,color:subText}}>{avail}/{count} disp.</span>
+                        </div>
+                        <div style={{background:darkMode?"#1e1e2e":"#e5e7eb",borderRadius:999,height:6,overflow:"hidden"}}>
+                          <div style={{width:pct+"%",height:"100%",background:`linear-gradient(90deg,${p.color},${p.color}88)`,borderRadius:999,transition:"width 0.5s ease"}}/>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Calificaciones recientes */}
+                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>⭐ Calificaciones recientes</h3>
+                  {ratings.length===0?<div style={{textAlign:"center",color:subText,padding:"20px 0"}}>Sin calificaciones aún</div>:(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {ratings.slice(0,10).map(r=>(
+                        <div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${borderColor}`}}>
+                          <PlatformIcon id={r.plataforma} size={24}/>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:12,fontWeight:600,color:textColor}}>{r.clienteNombre}</div>
+                            {r.comentario&&<div style={{fontSize:11,color:subText}}>{r.comentario}</div>}
+                          </div>
+                          <div style={{fontSize:14}}>{Array(r.estrellas).fill("⭐").join("")}</div>
+                          <button onClick={()=>deleteDoc(doc(db,"ratings",String(r.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={11}/></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             {/* CONFIG */}
             {adminTab==="settings"&&(
               <>
@@ -1389,6 +1871,95 @@ export default function StreamVault() {
             )}
           </div>
         </>
+      )}
+
+      {/* ═══ MODAL PAGO YAPE ═══ */}
+      {payModal&&clientUser&&(
+        <Modal title="Pagar con Yape" sub={payModal.plan + " — " + payModal.precio} onClose={()=>{ setPayModal(null); setPayStep(1); setPayCaptura(null); }} width={420} dark={darkMode}>
+          {payStep===1&&(
+            <>
+              <div style={{textAlign:"center",marginBottom:16}}>
+                <div style={{fontSize:13,color:subText,marginBottom:12}}>Escanea el QR con tu app de Yape</div>
+                <div style={{background:"#fff",borderRadius:16,padding:12,display:"inline-block",marginBottom:12}}>
+                  <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=yape://pay?phone=901815489%26amount=" + payModal.precio.replace("S/. ","")} alt="QR Yape" style={{width:180,height:180,display:"block"}}/>
+                </div>
+                <div style={{background:darkMode?"#0f0f1a":"#f0f2f8",border:"1px solid #6366f133",borderRadius:12,padding:"10px 14px",marginBottom:14}}>
+                  <div style={{fontSize:11,color:subText,marginBottom:4}}>Número Yape</div>
+                  <div style={{fontSize:20,fontWeight:800,color:"#6366f1",letterSpacing:1}}>901 815 489</div>
+                  <div style={{fontSize:12,color:subText,marginTop:2}}>Alex Eren</div>
+                </div>
+                <div style={{background:"#052e16",border:"1px solid #166534",borderRadius:10,padding:"8px 12px",fontSize:12,color:"#4ade80",marginBottom:16}}>
+                  Monto exacto: <strong>{payModal.precio}</strong> — {payModal.plan}
+                </div>
+              </div>
+              <Btn onClick={()=>setPayStep(2)} style={{width:"100%",justifyContent:"center"}}>Ya pagué — Subir captura</Btn>
+            </>
+          )}
+          {payStep===2&&(
+            <>
+              <div style={{textAlign:"center",marginBottom:16}}>
+                <div style={{fontSize:13,color:subText,marginBottom:12}}>Sube una captura de pantalla del comprobante de Yape</div>
+                <label style={{display:"block",cursor:"pointer"}}>
+                  <div style={{background:darkMode?"#0f0f1a":"#f0f2f8",border:"2px dashed #6366f1",borderRadius:14,padding:"28px 20px",textAlign:"center",transition:"all 0.2s"}}>
+                    {payCaptura?(
+                      <img src={payCaptura} alt="captura" style={{maxWidth:"100%",maxHeight:200,borderRadius:8,objectFit:"contain"}}/>
+                    ):(
+                      <>
+                        <Camera size={32} color="#6366f1" style={{marginBottom:8}}/>
+                        <div style={{fontSize:13,color:"#6366f1",fontWeight:600}}>Toca para subir captura</div>
+                        <div style={{fontSize:11,color:subText,marginTop:4}}>JPG, PNG — máx 1MB</div>
+                      </>
+                    )}
+                  </div>
+                  <input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{
+                    const file=e.target.files[0];
+                    if (!file) return;
+                    if (file.size>1000000) { toast("La imagen debe ser menor a 1MB","error"); return; }
+                    const reader=new FileReader();
+                    reader.onload=ev=>setPayCaptura(ev.target.result);
+                    reader.readAsDataURL(file);
+                  }}/>
+                </label>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:12}}>
+                <Btn variant="ghost" onClick={()=>setPayStep(1)} style={{flex:1,justifyContent:"center"}}>Atrás</Btn>
+                <Btn onClick={submitPayment} style={{flex:2,justifyContent:"center"}} disabled={!payCaptura||payUploading}>
+                  {payUploading?"Enviando...":"Enviar comprobante"}
+                </Btn>
+              </div>
+            </>
+          )}
+          {payStep===3&&(
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:48,marginBottom:12}}>🎉</div>
+              <h3 style={{fontSize:18,fontWeight:800,margin:"0 0 8px",color:textColor}}>¡Pago enviado!</h3>
+              <p style={{color:subText,fontSize:13,margin:"0 0 16px"}}>El admin revisará tu comprobante y aprobará tu plan en breve. Recibirás tu key de acceso.</p>
+              <Btn onClick={()=>{ setPayModal(null); setPayStep(1); setPayCaptura(null); }} style={{width:"100%",justifyContent:"center"}}>Entendido</Btn>
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {/* ═══ MODAL CALIFICACION ═══ */}
+      {ratingModal&&clientUser&&(
+        <Modal title="Califica el servicio" sub="Tu opinión nos ayuda a mejorar" onClose={()=>setRatingModal(null)} width={400} dark={darkMode}>
+          <div style={{textAlign:"center",marginBottom:16}}>
+            <PlatformIcon id={ratingModal} size={48}/>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:14,marginBottom:8}}>
+              {[1,2,3,4,5].map(s=>(
+                <button key={s} onClick={()=>setRatingVal(s)} style={{background:"none",border:"none",cursor:"pointer",fontSize:32,transition:"transform 0.15s",transform:ratingVal>=s?"scale(1.2)":"scale(1)"}}>
+                  {ratingVal>=s?"⭐":"☆"}
+                </button>
+              ))}
+            </div>
+            <div style={{fontSize:13,color:subText}}>{ratingVal===5?"¡Excelente!":ratingVal===4?"Muy bueno":ratingVal===3?"Regular":ratingVal===2?"Malo":"Muy malo"}</div>
+          </div>
+          <div style={{marginBottom:14}}>
+            <label style={{fontSize:12,color:subText,display:"block",marginBottom:6,fontWeight:600}}>Comentario (opcional)</label>
+            <textarea value={ratingComment} onChange={e=>setRatingComment(e.target.value)} placeholder="Cuéntanos tu experiencia..." rows={3} style={{width:"100%",background:darkMode?"#080812":"#f8f9fa",border:"1px solid " + borderColor,borderRadius:10,padding:"10px 13px",color:textColor,fontSize:13,outline:"none",boxSizing:"border-box",resize:"none",fontFamily:"inherit"}}/>
+          </div>
+          <Btn onClick={submitRating} style={{width:"100%",justifyContent:"center"}}><Star size={14}/> Enviar calificación</Btn>
+        </Modal>
       )}
 
       {/* ═══ MODALES ═══ */}
@@ -1504,8 +2075,22 @@ export default function StreamVault() {
         @keyframes float3{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,40px)}}
         @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
         @keyframes bannerPulse{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes glow{0%,100%{box-shadow:0 0 5px #6366f133}50%{box-shadow:0 0 20px #6366f166}}
+        button:active{transform:scale(0.97)!important}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .card-hover{transition:all 0.2s ease}
+        .card-hover:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(99,102,241,0.2)}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes popIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes glow{0%,100%{box-shadow:0 0 5px #6366f144}50%{box-shadow:0 0 20px #6366f188}}
+        .card-hover:hover{transform:translateY(-4px)!important;transition:all 0.2s ease!important}
+        .btn-glow{animation:glow 2s ease-in-out infinite}
       `}</style>
     </div>
   );
 }
-"// v4" 
