@@ -489,7 +489,8 @@ export default function StreamVault() {
       const diff = new Date(k.expiraEn) - new Date();
       const days = Math.ceil(diff / 86400000);
       if (days <= 3 && days > 0) {
-        notifs.push({ id: k.codigo, msg: , type: 'warn', plat: k.plataforma });
+        const platName = PLATFORMS.find(p=>p.id===k.plataforma)?.name || k.plataforma;
+        notifs.push({ id: k.codigo, msg: "Tu acceso a " + platName + " vence en " + days + " dia" + (days!==1?"s":""), type: 'warn', plat: k.plataforma });
       }
     });
     setNotifications(notifs);
@@ -2094,4 +2095,3 @@ export default function StreamVault() {
     </div>
   );
 }
-"// v5" 
