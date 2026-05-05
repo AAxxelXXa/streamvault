@@ -1374,41 +1374,6 @@ export default function StreamVault() {
               </>
             )}
 
-            {/* PAGOS */}
-            {adminTab==="payments"&&(
-              <>
-                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2><p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p></div>
-                {payments.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin pagos registrados</div>:(
-                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                    {payments.map(p=>(
-                      <div key={p.id} style={{background:cardBg,border:`1px solid ${p.estado==="pendiente"?"#1e3a8a":p.estado==="aprobado"?"#166534":"#7f1d1d"}`,borderRadius:14,padding:16}}>
-                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:10}}>
-                          <div style={{flex:1}}>
-                            <div style={{fontWeight:700,fontSize:14,color:textColor}}>{p.clienteNombre}</div>
-                            <div style={{fontSize:12,color:subText}}>{p.clienteEmail} · {p.plan} · {p.precio} · {p.fecha}</div>
-                          </div>
-                          <Badge color={p.estado==="pendiente"?"blue":p.estado==="aprobado"?"green":"red"} dot>{p.estado}</Badge>
-                          {p.estado==="pendiente"&&(
-                            <div style={{display:"flex",gap:6}}>
-                              <Btn small variant="success" onClick={()=>approvePayment(p)}><Check size={11}/> Aprobar</Btn>
-                              <Btn small variant="danger" onClick={()=>rejectPayment(p.id)}><X size={11}/> Rechazar</Btn>
-                            </div>
-                          )}
-                          <button onClick={()=>deleteDoc(doc(db,"payments",String(p.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={13}/></button>
-                        </div>
-                        {p.captura&&(
-                          <div style={{marginTop:8}}>
-                            <div style={{fontSize:11,color:subText,marginBottom:6}}>Comprobante de pago:</div>
-                            <img src={p.captura} alt="comprobante" style={{maxWidth:"100%",maxHeight:200,borderRadius:10,objectFit:"contain",border:"1px solid " + borderColor}}/>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
             {/* ANALYTICS */}
             {adminTab==="analytics"&&(
               <>
@@ -1716,74 +1681,6 @@ export default function StreamVault() {
             )}
 
             {/* ANALYTICS */}
-            {adminTab==="analytics"&&(
-              <>
-                <div style={{marginBottom:20}}>
-                  <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Analytics</h2>
-                  <p style={{color:subText,margin:0,fontSize:12}}>Resumen de tu negocio en tiempo real</p>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:24}}>
-                  {[
-                    {label:"Clientes activos",value:users.filter(u=>u.activo!==false).length,icon:"👥",color:"#6366f1"},
-                    {label:"Ingresos aprobados",value:"S/. "+payments.filter(p=>p.estado==="aprobado").reduce((s,p)=>s+parseInt(p.precio.replace("S/. ","")||0),0),icon:"💰",color:"#1DB954"},
-                    {label:"Keys activas",value:keys.filter(k=>!k.usada&&(!k.expiraEn||new Date()<new Date(k.expiraEn))).length,icon:"🔑",color:"#a855f7"},
-                    {label:"Cuentas disponibles",value:availableAcc,icon:"✅",color:"#00A8E1"},
-                    {label:"Tickets abiertos",value:tickets.filter(t=>t.estado==="abierto").length,icon:"🎫",color:"#f59e0b"},
-                    {label:"Calificación prom.",value:ratings.length>0?(ratings.reduce((s,r)=>s+r.estrellas,0)/ratings.length).toFixed(1)+"⭐":"—",icon:"⭐",color:"#fbbf24"},
-                  ].map(s=>(
-                    <div key={s.label} style={{background:cardBg,border:`1px solid ${s.color}33`,borderRadius:14,padding:"16px 14px",textAlign:"center"}}>
-                      <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:s.color,letterSpacing:-1}}>{s.value}</div>
-                      <div style={{fontSize:11,color:subText,marginTop:4}}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Plataformas más populares */}
-                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18,marginBottom:16}}>
-                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>📊 Plataformas más solicitadas</h3>
-                  {PLATFORMS.map(p=>{
-                    const count=(accounts[p.id]||[]).length;
-                    const avail=(accounts[p.id]||[]).filter(a=>a.status==="disponible").length;
-                    const total=Object.values(accounts).flat().length||1;
-                    const pct=Math.round((count/total)*100);
-                    return (
-                      <div key={p.id} style={{marginBottom:10}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                          <PlatformIcon id={p.id} size={20}/>
-                          <span style={{fontSize:12,fontWeight:600,flex:1,color:textColor}}>{p.name}</span>
-                          <span style={{fontSize:11,color:subText}}>{avail}/{count} disp.</span>
-                        </div>
-                        <div style={{background:darkMode?"#1e1e2e":"#e5e7eb",borderRadius:999,height:6,overflow:"hidden"}}>
-                          <div style={{width:pct+"%",height:"100%",background:`linear-gradient(90deg,${p.color},${p.color}88)`,borderRadius:999,transition:"width 0.5s ease"}}/>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Calificaciones recientes */}
-                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18}}>
-                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>⭐ Calificaciones recientes</h3>
-                  {ratings.length===0?<div style={{textAlign:"center",color:subText,padding:"20px 0"}}>Sin calificaciones aún</div>:(
-                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                      {ratings.slice(0,10).map(r=>(
-                        <div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${borderColor}`}}>
-                          <PlatformIcon id={r.plataforma} size={24}/>
-                          <div style={{flex:1}}>
-                            <div style={{fontSize:12,fontWeight:600,color:textColor}}>{r.clienteNombre}</div>
-                            {r.comentario&&<div style={{fontSize:11,color:subText}}>{r.comentario}</div>}
-                          </div>
-                          <div style={{fontSize:14}}>{Array(r.estrellas).fill("⭐").join("")}</div>
-                          <button onClick={()=>deleteDoc(doc(db,"ratings",String(r.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={11}/></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
             {/* CONFIG */}
             {adminTab==="settings"&&(
               <>
