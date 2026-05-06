@@ -24,7 +24,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
 const NTFY_TOPIC = "streamvault-axel-2026";
-const ADMIN_TELEGRAM = "https://t.me/alex_eren";
+const ADMIN_TELEGRAM = "https://t.me/Jagerchk_bot";
 const ADMIN_WA = "https://wa.me/51901815489";
 
 async function pushNotify(title, message) {
@@ -206,7 +206,6 @@ export default function StreamVault() {
   const [notifications,  setNotifications]  = useState([]);
   const [payments,       setPayments]       = useState([]);
   const [ratings,        setRatings]        = useState([]);
-  const [logs,           setLogs]           = useState([]);
   const [payModal,       setPayModal]       = useState(null);
   const [payCaptura,     setPayCaptura]     = useState(null);
   const [payStep,        setPayStep]        = useState(1);
@@ -214,17 +213,6 @@ export default function StreamVault() {
   const [ratingModal,    setRatingModal]    = useState(null);
   const [ratingComment,  setRatingComment]  = useState("");
   const [ratingVal,      setRatingVal]      = useState(5);
-
-  // ── Nuevos estados ──
-  const [userSearch,     setUserSearch]     = useState("");
-  const [keySearch,      setKeySearch]      = useState("");
-  const [paySearch,      setPaySearch]      = useState("");
-  const [editUserModal,  setEditUserModal]  = useState(null);
-  const [editUserData,   setEditUserData]   = useState({nombre:"",email:"",password:"",nota:""});
-  const [approveKeyModal,setApproveKeyModal]= useState(null);
-  const [approveKeyPlat, setApproveKeyPlat] = useState("netflix");
-  const [approveKeyDur,  setApproveKeyDur]  = useState("30d");
-  const [payFilter,      setPayFilter]      = useState("todos");
 
   // Chat
   const [chatMsg,     setChatMsg]     = useState("");
@@ -255,7 +243,6 @@ export default function StreamVault() {
     u.push(onSnapshot(collection(db,"discounts"),s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); setDiscounts(r); }));
     u.push(onSnapshot(collection(db,"payments"), s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)); setPayments(r); }));
     u.push(onSnapshot(collection(db,"ratings"),  s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)); setRatings(r); }));
-    u.push(onSnapshot(collection(db,"logs"),     s=>{ const r=[]; s.forEach(d=>r.push({id:d.id,...d.data()})); r.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)); setLogs(r); }));
     u.push(onSnapshot(doc(db,"config","settings"),s=>{ if(s.exists()) setSettings(s.data()); }));
     u.push(onSnapshot(doc(db,"config","status"),  s=>{ if(s.exists()) setServiceStatus(s.data()); }));
     setLoading(false);
@@ -315,24 +302,6 @@ export default function StreamVault() {
   async function fbSaveSettings(s) { setSettings(s); await setDoc(doc(db,"config","settings"),s); }
   function toast(msg,type="success") { setNotif({msg,type}); setTimeout(()=>setNotif(null),3200); }
   function copyText(text,k) { navigator.clipboard.writeText(text).then(()=>{ setCopied(k); setTimeout(()=>setCopied(null),2500); }); }
-
-  function exportCSV(data, filename, headers) {
-    if (!data.length) { toast("Sin datos para exportar","error"); return; }
-    const keys = Object.keys(headers);
-    const rows = [Object.values(headers).join(",")];
-    data.forEach(d => rows.push(keys.map(k => `"${(d[k]||"").toString().replace(/"/g,'""')}"`).join(",")));
-    const blob = new Blob([rows.join("\n")], { type:"text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href=url; a.download=filename+".csv"; a.click();
-    URL.revokeObjectURL(url); toast("CSV exportado ✅");
-  }
-
-  async function logActivity(accion, detalle, tipo="info") {
-    try {
-      const entry = { id:Date.now(), accion, detalle, tipo, timestamp:Date.now(), fecha:new Date().toLocaleString("es-PE") };
-      await setDoc(doc(db,"logs",String(entry.id)), entry);
-    } catch {}
-  }
 
   // ── Client Auth ──
   async function clientLogin() {
@@ -396,23 +365,12 @@ export default function StreamVault() {
   async function createUser() {
     if (!newUser.email||!newUser.password||!newUser.nombre) { toast("Completa todos los campos","error"); return; }
     if (users.find(u=>u.email.toLowerCase()===newUser.email.toLowerCase())) { toast("Ese email ya existe","error"); return; }
-    const refParam=new URLSearchParams(window.location.search).get("ref");
-    const u={id:`user_${Date.now()}`,email:newUser.email.trim(),password:newUser.password.trim(),nombre:newUser.nombre.trim(),activo:true,creadoEn:new Date().toISOString(),ultimoLogin:null,keys:[],avatar:null,nota:"",pagos:[],referidoPor:refParam||null};
+    const u={id:`user_${Date.now()}`,email:newUser.email.trim(),password:newUser.password.trim(),nombre:newUser.nombre.trim(),activo:true,creadoEn:new Date().toISOString(),ultimoLogin:null,keys:[],avatar:null};
     await setDoc(doc(db,"users",u.id),u);
-    await logActivity("Usuario creado", u.nombre, "info");
     setNewUser({email:"",password:"",nombre:""}); setModal(null); toast(`Usuario ${u.nombre} creado`);
   }
-  async function toggleUserActive(uid,current) { await updateDoc(doc(db,"users",uid),{activo:!current}); await logActivity("Usuario "+(current?"desactivado":"activado"), uid, current?"warn":"info"); }
-  async function deleteUser(uid) { await deleteDoc(doc(db,"users",uid)); await logActivity("Usuario eliminado", uid, "warn"); toast("Usuario eliminado"); }
-
-  async function updateUser() {
-    if (!editUserModal) return;
-    const { id } = editUserModal;
-    const data = { nombre: editUserData.nombre.trim(), email: editUserData.email.trim(), password: editUserData.password.trim(), nota: editUserData.nota.trim() };
-    await updateDoc(doc(db,"users",id), data);
-    await logActivity("Usuario editado", data.nombre, "info");
-    setEditUserModal(null); toast("Usuario actualizado ✅");
-  }
+  async function toggleUserActive(uid,current) { await updateDoc(doc(db,"users",uid),{activo:!current}); }
+  async function deleteUser(uid) { await deleteDoc(doc(db,"users",uid)); toast("Usuario eliminado"); }
   async function generateKeyForUser(uid,plat,dur) {
     const codigo=genKeyCode(plat); let expiraEn=null,durTexto="Ilimitada";
     if (dur!=="ilimitada") { const match=dur.match(/^(\d+)(d|h|m)$/); if(match){const val=parseInt(match[1]),u2=match[2],ms=u2==="d"?val*86400000:u2==="h"?val*3600000:val*60000;expiraEn=new Date(Date.now()+ms).toISOString();durTexto=u2==="d"?`${val} día(s)`:u2==="h"?`${val} hora(s)`:`${val} minuto(s)`;} }
@@ -420,7 +378,6 @@ export default function StreamVault() {
     await setDoc(doc(db,"keys",String(nk.id)),nk);
     const user=users.find(u=>u.id===uid);
     if (user) { const userKeys=user.keys||[]; await updateDoc(doc(db,"users",uid),{keys:[...userKeys,{codigo,plataforma:plat,duracion:durTexto,expiraEn,asignadaEn:new Date().toISOString()}]}); }
-    await logActivity("Key generada", `${codigo} → ${uid}`, "info");
     toast(`Key ${codigo} generada`); return codigo;
   }
 
@@ -580,30 +537,19 @@ export default function StreamVault() {
   }
 
   async function approvePayment(payment) {
-    setApproveKeyModal(payment);
-    setApproveKeyPlat("netflix");
-    setApproveKeyDur(payment.meses===1?"30d":payment.meses===3?"90d":"180d");
-  }
-
-  async function confirmApprovePayment() {
-    const payment = approveKeyModal;
-    if (!payment) return;
-    await updateDoc(doc(db,"payments",String(payment.id)),{estado:"aprobado",aprobadoEn:new Date().toISOString()});
-    const user = users.find(u=>u.id===payment.clienteId);
+    await updateDoc(doc(db, "payments", String(payment.id)), { estado: "aprobado", aprobadoEn: new Date().toISOString() });
+    const user = users.find(u => u.id === payment.clienteId);
     if (user) {
-      const hist = user.pagos||[];
-      await updateDoc(doc(db,"users",payment.clienteId),{pagos:[...hist,{plan:payment.plan,precio:payment.precio,fecha:payment.fecha,estado:"aprobado"}]});
-      await generateKeyForUser(payment.clienteId, approveKeyPlat, approveKeyDur);
+      const hist = user.pagos || [];
+      await updateDoc(doc(db, "users", payment.clienteId), {
+        pagos: [...hist, { plan: payment.plan, precio: payment.precio, fecha: payment.fecha, estado: "aprobado" }]
+      });
     }
-    await logActivity("Pago aprobado", `${payment.clienteNombre} · ${payment.precio}`, "info");
-    await pushNotify("✅ Pago aprobado — "+payment.clienteNombre, `Tu plan ${payment.plan} fue aprobado. Activa tu key en StreamVault.`);
-    setApproveKeyModal(null);
-    toast("Pago aprobado y key generada ✅");
+    toast("Pago de " + payment.clienteNombre + " aprobado ✅");
   }
 
   async function rejectPayment(id) {
     await updateDoc(doc(db, "payments", String(id)), { estado: "rechazado" });
-    await logActivity("Pago rechazado", id, "warn");
     toast("Pago rechazado");
   }
 
@@ -898,6 +844,25 @@ export default function StreamVault() {
             )}
           </div>
 
+          {/* Historial de pagos */}
+          {(clientUser?.pagos||[]).length>0&&(
+            <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:20,marginBottom:16}}>
+              <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>💰 Historial de pagos</h3>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {(clientUser?.pagos||[]).map((p,i)=>(
+                  <div key={i} style={{background:darkMode?"#080812":"#f0f2f8",borderRadius:10,padding:"10px 13px",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:600,fontSize:13,color:textColor}}>{p.plan}</div>
+                      <div style={{fontSize:11,color:subText}}>{p.fecha}</div>
+                    </div>
+                    <div style={{fontWeight:700,fontSize:14,color:"#4ade80"}}>{p.precio}</div>
+                    <Badge color={p.estado==="aprobado"?"green":"amber"} dot>{p.estado}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Renovar plan */}
           <div style={{background:darkMode?"linear-gradient(135deg,#1a0a2e,#0c1a3a)":"linear-gradient(135deg,#e0e7ff,#f0f4ff)",border:"1px solid #6366f133",borderRadius:16,padding:20,marginBottom:16,textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:8}}>🔄</div>
@@ -909,25 +874,6 @@ export default function StreamVault() {
                   {p.plan} — {p.precio}
                 </Btn>
               ))}
-            </div>
-          </div>
-
-          {/* Programa de referidos */}
-          <div style={{background:cardBg,border:"1px solid #f59e0b44",borderRadius:16,padding:20,marginBottom:16}}>
-            <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 4px",color:textColor}}>🎁 Programa de referidos</h3>
-            <p style={{fontSize:12,color:subText,margin:"0 0 14px"}}>Comparte tu link y gana descuentos cuando alguien se registre</p>
-            <div style={{display:"flex",gap:8,marginBottom:10}}>
-              <input readOnly value={`${window.location.origin}?ref=${clientUser.id}`} style={{flex:1,background:darkMode?"#080812":"#f0f2f8",border:`1px solid ${borderColor}`,borderRadius:10,padding:"10px 13px",color:textColor,fontSize:12,outline:"none",fontFamily:"monospace"}}/>
-              <Btn small onClick={()=>copyText(`${window.location.origin}?ref=${clientUser.id}`,"reflink")}>{copied==="reflink"?<Check size={12}/>:<Copy size={12}/>}</Btn>
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              <Btn small variant="ghost" onClick={()=>{
-                if(navigator.share) navigator.share({title:"StreamVault",text:"Accede a todas las plataformas de streaming por el mejor precio 🎬",url:`${window.location.origin}?ref=${clientUser.id}`});
-                else copyText(`${window.location.origin}?ref=${clientUser.id}`,"reflink2");
-              }}>📤 Compartir</Btn>
-              <div style={{background:darkMode?"#080812":"#f0f2f8",borderRadius:8,padding:"6px 12px",fontSize:12,color:subText,display:"flex",alignItems:"center",gap:6}}>
-                👥 <strong style={{color:textColor}}>{users.filter(u=>u.referidoPor===clientUser.id).length}</strong> referidos
-              </div>
             </div>
           </div>
 
@@ -973,50 +919,6 @@ export default function StreamVault() {
             <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:subText}}/>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar plataforma…" style={{width:"100%",background:cardBg,border:`1px solid ${borderColor}`,borderRadius:11,padding:"10px 10px 10px 36px",color:textColor,fontSize:14,outline:"none",boxSizing:"border-box"}}/>
           </div>
-
-          {/* Alertas de vencimiento */}
-          {(()=>{
-            const expiring=(clientUser.keys||[]).filter(k=>{
-              if(!k.expiraEn||k.usada===false) return false;
-              const days=Math.ceil((new Date(k.expiraEn)-new Date())/86400000);
-              return days<=5&&days>0;
-            });
-            if(!expiring.length) return null;
-            return (
-              <div style={{marginBottom:16}}>
-                {expiring.map((k,i)=>{
-                  const days=Math.ceil((new Date(k.expiraEn)-new Date())/86400000);
-                  const platName=PLATFORMS.find(p=>p.id===k.plataforma)?.name||k.plataforma;
-                  return (
-                    <div key={i} style={{background:"linear-gradient(135deg,#78350f22,#92400e11)",border:"1px solid #f59e0b88",borderRadius:12,padding:"12px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12}}>
-                      <span style={{fontSize:20}}>⏰</span>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:700,color:"#fbbf24"}}>Tu acceso a {platName} vence en {days} día{days!==1?"s":""}</div>
-                        <div style={{fontSize:11,color:subText}}>Renueva ahora para no perder tu acceso</div>
-                      </div>
-                      <Btn small onClick={()=>{ setPayModal({plan:"1 Mes",meses:1,precio:"S/. 10"}); setPayStep(1); setPayCaptura(null); }} style={{background:"#f59e0b",border:"none",color:"#000"}}>Renovar</Btn>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
-          {/* Estado de pagos pendientes */}
-          {(()=>{
-            const pendingPayments=payments.filter(p=>p.clienteId===clientUser.id&&p.estado==="pendiente");
-            if(!pendingPayments.length) return null;
-            return (
-              <div style={{background:"linear-gradient(135deg,#1e3a5f22,#1e40af11)",border:"1px solid #3b82f688",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
-                <span style={{fontSize:20}}>⏳</span>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:700,color:"#60a5fa"}}>Pago en revisión</div>
-                  <div style={{fontSize:11,color:subText}}>Tu comprobante está siendo verificado por el admin. Pronto recibirás tu acceso.</div>
-                </div>
-                <Badge color="blue" dot>Pendiente</Badge>
-              </div>
-            );
-          })()}
 
           {/* Plataformas */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12,marginBottom:40}}>
@@ -1317,12 +1219,11 @@ export default function StreamVault() {
               <Badge color="purple">Admin</Badge>
             </div>
             <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-              {["accounts","users","keys","payments","tickets","chat","ofertas","discounts","status","granted","analytics","logs","settings"].map(t=>(
+              {["accounts","users","keys","payments","tickets","chat","ofertas","discounts","status","granted","analytics","settings"].map(t=>(
                 <button key={t} onClick={()=>setAdminTab(t)} style={{background:adminTab===t?"#1e1e2e":"transparent",border:`1px solid ${borderColor}`,borderRadius:9,color:"#c4b5fd",padding:"5px 10px",cursor:"pointer",fontSize:11,fontWeight:600,position:"relative"}}>
-                  {t==="accounts"?"Cuentas":t==="users"?"Usuarios":t==="keys"?"Keys":t==="payments"?"Pagos":t==="tickets"?"Tickets":t==="chat"?"Chat":t==="ofertas"?"Ofertas":t==="discounts"?"Descuentos":t==="status"?"Estado":t==="granted"?"Otorgadas":t==="analytics"?"Analytics":t==="logs"?"Logs":"Config"}
+                  {t==="accounts"?"Cuentas":t==="users"?"Usuarios":t==="keys"?"Keys":t==="payments"?"Pagos":t==="tickets"?"Tickets":t==="chat"?"Chat":t==="ofertas"?"Ofertas":t==="discounts"?"Descuentos":t==="status"?"Estado":t==="granted"?"Otorgadas":t==="analytics"?"Analytics":"Config"}
                   {t==="tickets"&&openTickets.length>0&&<span style={{position:"absolute",top:-4,right:-4,width:8,height:8,borderRadius:"50%",background:"#f87171"}}/>}
                   {t==="chat"&&chats.filter(c=>c.de!=="admin").length>0&&<span style={{position:"absolute",top:-4,right:-4,width:8,height:8,borderRadius:"50%",background:"#6366f1"}}/>}
-                  {t==="payments"&&payments.filter(p=>p.estado==="pendiente").length>0&&<span style={{position:"absolute",top:-4,right:-4,width:8,height:8,borderRadius:"50%",background:"#fbbf24"}}/>}
                 </button>
               ))}
               <button onClick={()=>setDarkMode(!darkMode)} style={{background:"none",border:`1px solid ${borderColor}`,borderRadius:9,padding:"5px 8px",cursor:"pointer",color:subText}}>{darkMode?<Sun size={13}/>:<Moon size={13}/>}</button>
@@ -1473,6 +1374,41 @@ export default function StreamVault() {
               </>
             )}
 
+            {/* PAGOS */}
+            {adminTab==="payments"&&(
+              <>
+                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2><p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p></div>
+                {payments.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin pagos registrados</div>:(
+                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                    {payments.map(p=>(
+                      <div key={p.id} style={{background:cardBg,border:`1px solid ${p.estado==="pendiente"?"#1e3a8a":p.estado==="aprobado"?"#166534":"#7f1d1d"}`,borderRadius:14,padding:16}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:10}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:700,fontSize:14,color:textColor}}>{p.clienteNombre}</div>
+                            <div style={{fontSize:12,color:subText}}>{p.clienteEmail} · {p.plan} · {p.precio} · {p.fecha}</div>
+                          </div>
+                          <Badge color={p.estado==="pendiente"?"blue":p.estado==="aprobado"?"green":"red"} dot>{p.estado}</Badge>
+                          {p.estado==="pendiente"&&(
+                            <div style={{display:"flex",gap:6}}>
+                              <Btn small variant="success" onClick={()=>approvePayment(p)}><Check size={11}/> Aprobar</Btn>
+                              <Btn small variant="danger" onClick={()=>rejectPayment(p.id)}><X size={11}/> Rechazar</Btn>
+                            </div>
+                          )}
+                          <button onClick={()=>deleteDoc(doc(db,"payments",String(p.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={13}/></button>
+                        </div>
+                        {p.captura&&(
+                          <div style={{marginTop:8}}>
+                            <div style={{fontSize:11,color:subText,marginBottom:6}}>Comprobante de pago:</div>
+                            <img src={p.captura} alt="comprobante" style={{maxWidth:"100%",maxHeight:200,borderRadius:10,objectFit:"contain",border:"1px solid " + borderColor}}/>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
             {/* ANALYTICS */}
             {adminTab==="analytics"&&(
               <>
@@ -1562,31 +1498,22 @@ export default function StreamVault() {
             {/* USUARIOS */}
             {adminTab==="users"&&(
               <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
                   <div><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Usuarios</h2><p style={{color:subText,margin:0,fontSize:12}}>{users.length} registrados</p></div>
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    <Btn variant="ghost" small onClick={()=>exportCSV(users,"usuarios",{nombre:"Nombre",email:"Email",password:"Contraseña",activo:"Activo",ultimoLogin:"Último Login",nota:"Nota"})}><FileText size={12}/> CSV</Btn>
-                    <Btn onClick={()=>{ setNewUser({email:"",password:"",nombre:""}); setModal("newUser"); }}><Plus size={14}/> Crear Usuario</Btn>
-                  </div>
-                </div>
-                <div style={{position:"relative",marginBottom:14}}>
-                  <Search size={13} style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:subText}}/>
-                  <input value={userSearch} onChange={e=>setUserSearch(e.target.value)} placeholder="Buscar por nombre o email..." style={{width:"100%",background:cardBg,border:`1px solid ${borderColor}`,borderRadius:10,padding:"9px 9px 9px 32px",color:textColor,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <Btn onClick={()=>{ setNewUser({email:"",password:"",nombre:""}); setModal("newUser"); }}><Plus size={14}/> Crear Usuario</Btn>
                 </div>
                 {users.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin usuarios.</div>:(
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                    {users.filter(u=>!userSearch||u.nombre?.toLowerCase().includes(userSearch.toLowerCase())||u.email?.toLowerCase().includes(userSearch.toLowerCase())).map(u=>(
+                    {users.map(u=>(
                       <div key={u.id} style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:16}}>
-                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:(u.keys||[]).length>0||u.nota?10:0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:(u.keys||[]).length>0?10:0}}>
                           <Avatar user={u} size={36}/>
                           <div style={{flex:1}}>
                             <div style={{fontWeight:700,fontSize:14,color:textColor}}>{u.nombre}</div>
                             <div style={{fontSize:12,color:subText}}>{u.email} · {u.ultimoLogin?`Login: ${new Date(u.ultimoLogin).toLocaleDateString("es-PE")}`:"Nunca"}</div>
-                            {u.nota&&<div style={{fontSize:11,color:"#fbbf24",marginTop:2}}>📝 {u.nota}</div>}
                           </div>
                           <Badge color={u.activo!==false?"green":"red"} dot>{u.activo!==false?"Activo":"Inactivo"}</Badge>
                           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                            <Btn small variant="ghost" onClick={()=>{ setEditUserModal(u); setEditUserData({nombre:u.nombre||"",email:u.email||"",password:u.password||"",nota:u.nota||""}); }}>✏️ Editar</Btn>
                             <Btn small variant="success" onClick={()=>{ setModal("userKey"); setNewUserKeyPlat("netflix"); setNewUserKeyDur("30d"); setNewUser({...newUser,_uid:u.id,_nombre:u.nombre}); }}><Key size={11}/> Key</Btn>
                             <Btn small variant={u.activo!==false?"amber":"success"} onClick={()=>toggleUserActive(u.id,u.activo!==false)}>{u.activo!==false?"Desactivar":"Activar"}</Btn>
                             <Btn small variant="danger" onClick={()=>deleteUser(u.id)}><Trash2 size={11}/></Btn>
@@ -1597,11 +1524,10 @@ export default function StreamVault() {
                             <div style={{fontSize:10,color:subText,marginBottom:5,fontWeight:600}}>KEYS ASIGNADAS</div>
                             {(u.keys||[]).map((k,i)=>{
                               const expired=k.expiraEn&&new Date()>new Date(k.expiraEn);
-                              const daysLeft=k.expiraEn?Math.ceil((new Date(k.expiraEn)-new Date())/86400000):null;
                               return <div key={i} style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:3}}>
                                 <code style={{fontSize:12,fontWeight:700,color:expired?"#6b7280":"#c4b5fd",letterSpacing:1}}>{k.codigo}</code>
                                 <span style={{fontSize:11,color:subText}}>{PLATFORMS.find(p=>p.id===k.plataforma)?.name} · {k.duracion}</span>
-                                <Badge color={expired?"red":daysLeft!==null&&daysLeft<=3?"amber":"green"} dot>{expired?"Expirada":daysLeft!==null?`${daysLeft}d restantes`:"Activa"}</Badge>
+                                <Badge color={expired?"red":"green"} dot>{expired?"Expirada":"Activa"}</Badge>
                                 <button onClick={()=>copyText(k.codigo,`uk-${i}`)} style={{background:"none",border:"none",cursor:"pointer",color:copied===`uk-${i}`?"#4ade80":subText}}>{copied===`uk-${i}`?<Check size={11}/>:<Copy size={11}/>}</button>
                               </div>;
                             })}
@@ -1673,14 +1599,7 @@ export default function StreamVault() {
             {/* KEYS */}
             {adminTab==="keys"&&(
               <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                  <div><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Keys</h2><p style={{color:subText,margin:0,fontSize:12}}>{activeKeys.length} activas · {keys.length} total</p></div>
-                  <Btn variant="ghost" small onClick={()=>exportCSV(keys,"keys",{codigo:"Código",plataforma:"Plataforma",duracion:"Duración",usada:"Usada",expiraEn:"Expira",creadaEn:"Creada"})}><FileText size={12}/> CSV</Btn>
-                </div>
-                <div style={{position:"relative",marginBottom:14}}>
-                  <Search size={13} style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:subText}}/>
-                  <input value={keySearch} onChange={e=>setKeySearch(e.target.value)} placeholder="Buscar por código o plataforma..." style={{width:"100%",background:cardBg,border:`1px solid ${borderColor}`,borderRadius:10,padding:"9px 9px 9px 32px",color:textColor,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                </div>
+                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Keys</h2><p style={{color:subText,margin:0,fontSize:12}}>{activeKeys.length} activas</p></div>
                 <div style={{background:cardBg,border:"1px solid #6366f133",borderRadius:16,padding:20,marginBottom:20}}>
                   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:14}}>
                     <div style={{flex:1,minWidth:160}}><Select dark={darkMode} label="Plataforma" value={genKeyPlat} onChange={e=>setGenKeyPlat(e.target.value)}>{PLATFORMS.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</Select></div>
@@ -1698,7 +1617,7 @@ export default function StreamVault() {
                   )}
                 </div>
                 <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,overflow:"hidden"}}>
-                  {keys.length===0?<div style={{textAlign:"center",color:subText,padding:"40px 0"}}>No hay keys</div>:keys.filter(k=>!keySearch||k.codigo?.toLowerCase().includes(keySearch.toLowerCase())||k.plataforma?.toLowerCase().includes(keySearch.toLowerCase())).map((k,i,arr)=>{
+                  {keys.length===0?<div style={{textAlign:"center",color:subText,padding:"40px 0"}}>No hay keys</div>:keys.map((k,i)=>{
                     const expired=k.expiraEn&&new Date()>new Date(k.expiraEn);
                     return (
                       <div key={k.id} style={{padding:"11px 16px",borderBottom:i<keys.length-1?`1px solid ${borderColor}`:"none",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
@@ -1748,15 +1667,9 @@ export default function StreamVault() {
             {/* PAGOS */}
             {adminTab==="payments"&&(
               <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                  <div><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2>
-                  <p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p></div>
-                  <Btn variant="ghost" small onClick={()=>exportCSV(payments,"pagos",{clienteNombre:"Cliente",clienteEmail:"Email",plan:"Plan",precio:"Precio",estado:"Estado",fecha:"Fecha"})}><FileText size={12}/> CSV</Btn>
-                </div>
-                <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-                  {["todos","pendiente","aprobado","rechazado"].map(f=>(
-                    <button key={f} onClick={()=>setPayFilter(f)} style={{background:payFilter===f?"#6366f1":"transparent",border:`1px solid ${payFilter===f?"#6366f1":borderColor}`,borderRadius:8,padding:"5px 12px",color:payFilter===f?"#fff":subText,cursor:"pointer",fontSize:12,fontWeight:600,textTransform:"capitalize"}}>{f==="todos"?"Todos":f}</button>
-                  ))}
+                <div style={{marginBottom:20}}>
+                  <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Pagos con Yape</h2>
+                  <p style={{color:subText,margin:0,fontSize:12}}>{payments.filter(p=>p.estado==="pendiente").length} pendientes · {payments.length} total</p>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:18}}>
                   {[
@@ -1773,7 +1686,7 @@ export default function StreamVault() {
                 </div>
                 {payments.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin pagos aún</div>:(
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                    {payments.filter(p=>payFilter==="todos"||p.estado===payFilter).map(pay=>(
+                    {payments.map(pay=>(
                       <div key={pay.id} style={{background:cardBg,border:`1px solid ${pay.estado==="pendiente"?"#78350f":pay.estado==="aprobado"?"#166534":"#7f1d1d"}`,borderRadius:14,padding:16}}>
                         <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:pay.captura?12:0}}>
                           <div style={{flex:1}}>
@@ -1803,31 +1716,71 @@ export default function StreamVault() {
             )}
 
             {/* ANALYTICS */}
-            {/* LOGS */}
-            {adminTab==="logs"&&(
+            {adminTab==="analytics"&&(
               <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
-                  <div><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Registro de Actividad</h2><p style={{color:subText,margin:0,fontSize:12}}>{logs.length} eventos registrados</p></div>
-                  <div style={{display:"flex",gap:8}}>
-                    <Btn variant="ghost" small onClick={()=>exportCSV(logs,"logs",{accion:"Acción",detalle:"Detalle",tipo:"Tipo",fecha:"Fecha"})}><FileText size={12}/> CSV</Btn>
-                    <Btn variant="danger" small onClick={async()=>{ if(!window.confirm("¿Borrar todos los logs?")) return; for(const l of logs) await deleteDoc(doc(db,"logs",String(l.id))); toast("Logs eliminados"); }}><Trash2 size={12}/> Limpiar</Btn>
-                  </div>
+                <div style={{marginBottom:20}}>
+                  <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Analytics</h2>
+                  <p style={{color:subText,margin:0,fontSize:12}}>Resumen de tu negocio en tiempo real</p>
                 </div>
-                {logs.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin actividad registrada</div>:(
-                  <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,overflow:"hidden"}}>
-                    {logs.slice(0,100).map((l,i)=>(
-                      <div key={l.id} style={{padding:"10px 16px",borderBottom:i<logs.length-1?`1px solid ${borderColor}`:"none",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:l.tipo==="warn"?"#fbbf24":l.tipo==="error"?"#f87171":"#4ade80",flexShrink:0}}/>
-                        <div style={{flex:1}}>
-                          <div style={{fontSize:13,fontWeight:600,color:textColor}}>{l.accion}</div>
-                          <div style={{fontSize:11,color:subText}}>{l.detalle}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:24}}>
+                  {[
+                    {label:"Clientes activos",value:users.filter(u=>u.activo!==false).length,icon:"👥",color:"#6366f1"},
+                    {label:"Ingresos aprobados",value:"S/. "+payments.filter(p=>p.estado==="aprobado").reduce((s,p)=>s+parseInt(p.precio.replace("S/. ","")||0),0),icon:"💰",color:"#1DB954"},
+                    {label:"Keys activas",value:keys.filter(k=>!k.usada&&(!k.expiraEn||new Date()<new Date(k.expiraEn))).length,icon:"🔑",color:"#a855f7"},
+                    {label:"Cuentas disponibles",value:availableAcc,icon:"✅",color:"#00A8E1"},
+                    {label:"Tickets abiertos",value:tickets.filter(t=>t.estado==="abierto").length,icon:"🎫",color:"#f59e0b"},
+                    {label:"Calificación prom.",value:ratings.length>0?(ratings.reduce((s,r)=>s+r.estrellas,0)/ratings.length).toFixed(1)+"⭐":"—",icon:"⭐",color:"#fbbf24"},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:cardBg,border:`1px solid ${s.color}33`,borderRadius:14,padding:"16px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
+                      <div style={{fontSize:24,fontWeight:900,color:s.color,letterSpacing:-1}}>{s.value}</div>
+                      <div style={{fontSize:11,color:subText,marginTop:4}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plataformas más populares */}
+                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18,marginBottom:16}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>📊 Plataformas más solicitadas</h3>
+                  {PLATFORMS.map(p=>{
+                    const count=(accounts[p.id]||[]).length;
+                    const avail=(accounts[p.id]||[]).filter(a=>a.status==="disponible").length;
+                    const total=Object.values(accounts).flat().length||1;
+                    const pct=Math.round((count/total)*100);
+                    return (
+                      <div key={p.id} style={{marginBottom:10}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                          <PlatformIcon id={p.id} size={20}/>
+                          <span style={{fontSize:12,fontWeight:600,flex:1,color:textColor}}>{p.name}</span>
+                          <span style={{fontSize:11,color:subText}}>{avail}/{count} disp.</span>
                         </div>
-                        <div style={{fontSize:11,color:subText,whiteSpace:"nowrap"}}>{l.fecha}</div>
-                        <button onClick={()=>deleteDoc(doc(db,"logs",String(l.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={11}/></button>
+                        <div style={{background:darkMode?"#1e1e2e":"#e5e7eb",borderRadius:999,height:6,overflow:"hidden"}}>
+                          <div style={{width:pct+"%",height:"100%",background:`linear-gradient(90deg,${p.color},${p.color}88)`,borderRadius:999,transition:"width 0.5s ease"}}/>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
+
+                {/* Calificaciones recientes */}
+                <div style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:14,padding:18}}>
+                  <h3 style={{fontSize:15,fontWeight:700,margin:"0 0 14px",color:textColor}}>⭐ Calificaciones recientes</h3>
+                  {ratings.length===0?<div style={{textAlign:"center",color:subText,padding:"20px 0"}}>Sin calificaciones aún</div>:(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {ratings.slice(0,10).map(r=>(
+                        <div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${borderColor}`}}>
+                          <PlatformIcon id={r.plataforma} size={24}/>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:12,fontWeight:600,color:textColor}}>{r.clienteNombre}</div>
+                            {r.comentario&&<div style={{fontSize:11,color:subText}}>{r.comentario}</div>}
+                          </div>
+                          <div style={{fontSize:14}}>{Array(r.estrellas).fill("⭐").join("")}</div>
+                          <button onClick={()=>deleteDoc(doc(db,"ratings",String(r.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={11}/></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -2036,46 +1989,6 @@ export default function StreamVault() {
         </Modal>
       )}
 
-      {/* ═══ MODAL EDITAR USUARIO (Admin) ═══ */}
-      {editUserModal&&(
-        <Modal title="Editar Usuario" sub={editUserModal.email} onClose={()=>setEditUserModal(null)} width={420} dark={darkMode}>
-          <Input dark={darkMode} label="Nombre" value={editUserData.nombre} onChange={e=>setEditUserData(d=>({...d,nombre:e.target.value}))}/>
-          <Input dark={darkMode} label="Email" value={editUserData.email} onChange={e=>setEditUserData(d=>({...d,email:e.target.value}))}/>
-          <Input dark={darkMode} label="Contraseña" value={editUserData.password} onChange={e=>setEditUserData(d=>({...d,password:e.target.value}))}/>
-          <div style={{marginBottom:14}}>
-            <label style={{fontSize:12,color:subText,display:"block",marginBottom:6,fontWeight:600}}>📝 Nota interna (solo admin)</label>
-            <textarea value={editUserData.nota} onChange={e=>setEditUserData(d=>({...d,nota:e.target.value}))} placeholder="Ej: Cliente VIP, no renovó en enero..." rows={3} style={{width:"100%",background:darkMode?"#080812":"#f8f9fa",border:`1px solid ${borderColor}`,borderRadius:10,padding:"10px 13px",color:textColor,fontSize:13,outline:"none",boxSizing:"border-box",resize:"none",fontFamily:"inherit"}}/>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <Btn variant="ghost" onClick={()=>setEditUserModal(null)} style={{flex:1,justifyContent:"center"}}>Cancelar</Btn>
-            <Btn onClick={updateUser} style={{flex:2,justifyContent:"center"}}><Check size={13}/> Guardar cambios</Btn>
-          </div>
-        </Modal>
-      )}
-
-      {/* ═══ MODAL APROBAR PAGO — seleccionar plataforma y duración ═══ */}
-      {approveKeyModal&&(
-        <Modal title="Aprobar Pago" sub={`${approveKeyModal.clienteNombre} · ${approveKeyModal.precio}`} onClose={()=>setApproveKeyModal(null)} width={400} dark={darkMode}>
-          <div style={{background:darkMode?"#080812":"#f0f8ff",border:`1px solid #166534`,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#4ade80"}}>
-            ✅ Se generará una key automáticamente y se asignará al cliente.
-          </div>
-          <Select dark={darkMode} label="Plataforma a otorgar" value={approveKeyPlat} onChange={e=>setApproveKeyPlat(e.target.value)}>
-            {PLATFORMS.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-          </Select>
-          <Select dark={darkMode} label="Duración" value={approveKeyDur} onChange={e=>setApproveKeyDur(e.target.value)}>
-            <option value="30d">30 días (1 mes)</option>
-            <option value="90d">90 días (3 meses)</option>
-            <option value="180d">180 días (6 meses)</option>
-            <option value="365d">365 días (1 año)</option>
-            <option value="ilimitada">Ilimitada</option>
-          </Select>
-          <div style={{display:"flex",gap:8,marginTop:4}}>
-            <Btn variant="ghost" onClick={()=>setApproveKeyModal(null)} style={{flex:1,justifyContent:"center"}}>Cancelar</Btn>
-            <Btn onClick={confirmApprovePayment} style={{flex:2,justifyContent:"center",background:"linear-gradient(135deg,#166534,#15803d)"}}><Check size={14}/> Confirmar y aprobar</Btn>
-          </div>
-        </Modal>
-      )}
-
       <footer style={{borderTop:`1px solid ${borderColor}`,padding:"20px 16px",textAlign:"center",color:subText,fontSize:12,marginTop:40}}>
         StreamVault © 2026 · <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6366f1",fontSize:12}}>@alex_eren</button>
       </footer>
@@ -2095,17 +2008,20 @@ export default function StreamVault() {
         @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
         @keyframes bannerPulse{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
         @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes glow{0%,100%{box-shadow:0 0 5px #6366f144}50%{box-shadow:0 0 20px #6366f188}}
-        @keyframes popIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
-        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes glow{0%,100%{box-shadow:0 0 5px #6366f133}50%{box-shadow:0 0 20px #6366f166}}
         button:active{transform:scale(0.97)!important}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         .card-hover{transition:all 0.2s ease}
         .card-hover:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(99,102,241,0.2)}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes popIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes glow{0%,100%{box-shadow:0 0 5px #6366f144}50%{box-shadow:0 0 20px #6366f188}}
         .card-hover:hover{transform:translateY(-4px)!important;transition:all 0.2s ease!important}
         .btn-glow{animation:glow 2s ease-in-out infinite}
-        @media(max-width:480px){nav{padding:8px 10px!important}}
       `}</style>
     </div>
   );
