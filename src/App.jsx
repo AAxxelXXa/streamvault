@@ -294,13 +294,13 @@ export default function StreamVault() {
             if (newSessions[plat]) return;
             // Si la key está expirada, ignorar
             if (k.expiraEn && new Date(k.expiraEn) < now) return;
-            // Crear sesión automática
+            // Crear sesión automática con la cuenta asignada
             newSessions[plat] = {
               plataforma: plat,
               keyCodigo: k.codigo,
               duracion: k.duracion,
               expiraEn: k.expiraEn || null,
-              cuenta: null,
+              cuenta: k.cuenta || null,
               iniciadaEn: k.asignadaEn || new Date().toISOString(),
               autoAsignada: true,
             };
@@ -448,11 +448,33 @@ export default function StreamVault() {
   async function generateKeyForUser(uid,plat,dur) {
     const codigo=genKeyCode(plat); let expiraEn=null,durTexto="Ilimitada";
     if (dur!=="ilimitada") { const match=dur.match(/^(\d+)(d|h|m)$/); if(match){const val=parseInt(match[1]),u2=match[2],ms=u2==="d"?val*86400000:u2==="h"?val*3600000:val*60000;expiraEn=new Date(Date.now()+ms).toISOString();durTexto=u2==="d"?`${val} día(s)`:u2==="h"?`${val} hora(s)`:`${val} minuto(s)`;} }
-    // usada:true — key ya asignada directamente al usuario, no necesita activación manual
+
+    // ── Asignar cuenta del stock ──
+    let cuentaAsignada=null;
+    const disponibles=(accounts[plat]||[]).filter(a=>a.status==="disponible");
+    if (disponibles.length>0) {
+      const randomAcc=disponibles[Math.floor(Math.random()*disponibles.length)];
+      cuentaAsignada=randomAcc;
+      // Guardar en granted
+      const g={id:Date.now(),plataforma:plat,email:randomAcc.email,password:randomAcc.password,profile:randomAcc.profile||"",keyCodigo:codigo,keyDuracion:durTexto,otorgadaEn:Date.now(),otorgadaEnFmt:new Date().toLocaleString("es-PE"),clienteId:uid};
+      await setDoc(doc(db,"granted",String(g.id)),g);
+      // Marcar cuenta como ocupada
+      const updated={...accounts};
+      updated[plat]=updated[plat].map(a=>a.id===randomAcc.id?{...a,status:"ocupado",assignedTo:uid}:a);
+      await fbSaveAccounts(updated);
+    }
+
+    // usada:true — key ya asignada, no necesita activación manual
     const nk={id:Date.now(),codigo,plataforma:plat,duracion:durTexto,expiraEn,usada:true,creadaEn:Date.now(),asignadaA:uid};
     await setDoc(doc(db,"keys",String(nk.id)),nk);
+
+    // Guardar key en el perfil del usuario
     const user=users.find(u=>u.id===uid);
-    if (user) { const userKeys=user.keys||[]; await updateDoc(doc(db,"users",uid),{keys:[...userKeys,{codigo,plataforma:plat,duracion:durTexto,expiraEn,asignadaEn:new Date().toISOString()}]}); }
+    if (user) {
+      const userKeys=user.keys||[];
+      await updateDoc(doc(db,"users",uid),{keys:[...userKeys,{codigo,plataforma:plat,duracion:durTexto,expiraEn,asignadaEn:new Date().toISOString(),cuenta:cuentaAsignada?{email:cuentaAsignada.email,password:cuentaAsignada.password,profile:cuentaAsignada.profile||""}:null}]});
+    }
+
     await logActivity("Key generada", `${codigo} → ${uid}`, "info");
     toast(`Key ${codigo} generada`); return codigo;
   }
