@@ -306,13 +306,18 @@ export default function StreamVault() {
             const plat = k.plataforma;
             if (newSessions[plat]) return;
             if (k.expiraEn && new Date(k.expiraEn) < now) return;
+            // Build cuenta: prefer web format (k.cuenta), fallback to bot format (k.email/k.password)
+            let cuentaObj = k.cuenta || null;
+            if (!cuentaObj && (k.email || k.password)) {
+              cuentaObj = { email: k.email || "", password: k.password || "", profile: k.profile || "" };
+            }
             newSessions[plat] = {
-              plataforma: plat,
-              keyCodigo: k.codigo,
-              duracion: k.duracion,
-              expiraEn: k.expiraEn || null,
-              cuenta: k.cuenta || null,
-              iniciadaEn: k.asignadaEn || new Date().toISOString(),
+              plataforma:  plat,
+              keyCodigo:   k.codigo,
+              duracion:    k.duracion,
+              expiraEn:    k.expiraEn || null,
+              cuenta:      cuentaObj,
+              iniciadaEn:  k.asignadaEn || k.activadaEn || new Date().toISOString(),
               autoAsignada: true,
             };
             changed = true;
