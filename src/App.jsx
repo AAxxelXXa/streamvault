@@ -280,21 +280,32 @@ export default function StreamVault() {
         setClientUser(updated);
         localStorage.setItem("sv_client", JSON.stringify(updated));
 
-        // ── Auto-crear sesiones desde keys asignadas por admin ──
-        // Si el usuario tiene keys en su perfil de Firebase que no están
-        // en localStorage, crearlas automáticamente sin pedir activación.
         const userKeys = updated.keys || [];
         const now = new Date();
+        const validCodigos = new Set(
+          userKeys
+            .filter(k => !k.expiraEn || new Date(k.expiraEn) > now)
+            .map(k => k.codigo)
+        );
+
         setSessions(prev => {
           const newSessions = { ...prev };
           let changed = false;
+
+          // ── Eliminar sesiones cuya key ya no existe en Firebase ──
+          Object.keys(newSessions).forEach(plat => {
+            const ses = newSessions[plat];
+            if (ses?.keyCodigo && !validCodigos.has(ses.keyCodigo)) {
+              delete newSessions[plat];
+              changed = true;
+            }
+          });
+
+          // ── Auto-crear sesiones desde keys asignadas por admin ──
           userKeys.forEach(k => {
             const plat = k.plataforma;
-            // Si ya tiene sesión activa para esta plataforma, ignorar
             if (newSessions[plat]) return;
-            // Si la key está expirada, ignorar
             if (k.expiraEn && new Date(k.expiraEn) < now) return;
-            // Crear sesión automática con la cuenta asignada
             newSessions[plat] = {
               plataforma: plat,
               keyCodigo: k.codigo,
@@ -306,6 +317,7 @@ export default function StreamVault() {
             };
             changed = true;
           });
+
           if (changed) {
             localStorage.setItem("sv_sessions", JSON.stringify(newSessions));
           }
