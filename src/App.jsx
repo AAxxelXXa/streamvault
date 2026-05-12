@@ -9,7 +9,7 @@ import {
 import { initializeApp } from "firebase/app";
 import {
   getFirestore, collection, doc, setDoc, deleteDoc,
-  onSnapshot, updateDoc, serverTimestamp
+  onSnapshot, updateDoc, serverTimestamp, getDoc
 } from "firebase/firestore";
 
 const firebaseConfig = {
