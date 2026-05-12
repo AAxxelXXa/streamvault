@@ -309,18 +309,24 @@ export default function StreamVault() {
             // Build cuenta: prefer web format (k.cuenta), fallback to bot format (k.email/k.password)
             let cuentaObj = k.cuenta || null;
             if (!cuentaObj && (k.email || k.password)) {
-              cuentaObj = { email: k.email || "", password: k.password || "", profile: k.profile || "" };
+              cuentaObj = { email: (k.email||"").trim(), password: k.password||"", profile: k.profile||"" };
             }
-            newSessions[plat] = {
-              plataforma:  plat,
-              keyCodigo:   k.codigo,
-              duracion:    k.duracion,
-              expiraEn:    k.expiraEn || null,
-              cuenta:      cuentaObj,
-              iniciadaEn:  k.asignadaEn || k.activadaEn || new Date().toISOString(),
-              autoAsignada: true,
-            };
-            changed = true;
+            const existing = newSessions[plat];
+            if (!existing) {
+              newSessions[plat] = {
+                plataforma:  plat,
+                keyCodigo:   k.codigo,
+                duracion:    k.duracion,
+                expiraEn:    k.expiraEn || null,
+                cuenta:      cuentaObj,
+                iniciadaEn:  k.asignadaEn || k.activadaEn || new Date().toISOString(),
+                autoAsignada: true,
+              };
+              changed = true;
+            } else if (!existing.cuenta && cuentaObj) {
+              newSessions[plat] = { ...existing, cuenta: cuentaObj };
+              changed = true;
+            }
           });
 
           if (changed) {
@@ -390,6 +396,8 @@ export default function StreamVault() {
     const found=users.find(u=>u.email.toLowerCase()===cEmail.toLowerCase().trim()&&u.password===cPass.trim());
     if (!found) { setCErr("Email o contraseña incorrectos"); return; }
     if (found.activo===false) { setCErr("Tu cuenta está desactivada. Contacta al admin."); return; }
+    // Clear cached sessions so they get rebuilt fresh from Firebase (with credentials)
+    setSessions({}); localStorage.removeItem("sv_sessions");
     setClientUser(found);
     localStorage.setItem("sv_client",JSON.stringify(found));
     await updateDoc(doc(db,"users",found.id),{ultimoLogin:new Date().toISOString()});
