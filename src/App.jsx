@@ -1658,6 +1658,13 @@ export default function StreamVault() {
                                 <span style={{fontSize:11,color:subText}}>{PLATFORMS.find(p=>p.id===k.plataforma)?.name} · {k.duracion}</span>
                                 <Badge color={expired?"red":daysLeft!==null&&daysLeft<=3?"amber":"green"} dot>{expired?"Expirada":daysLeft!==null?`${daysLeft}d restantes`:"Activa"}</Badge>
                                 <button onClick={()=>copyText(k.codigo,`uk-${i}`)} style={{background:"none",border:"none",cursor:"pointer",color:copied===`uk-${i}`?"#4ade80":subText}}>{copied===`uk-${i}`?<Check size={11}/>:<Copy size={11}/>}</button>
+                                <button onClick={async()=>{
+                                  if(!window.confirm(`¿Eliminar key ${k.codigo}?`)) return;
+                                  const newKeys=(u.keys||[]).filter((_,idx)=>idx!==i);
+                                  await updateDoc(doc(db,"users",u.id),{keys:newKeys});
+                                  await logActivity("Key eliminada",`${k.codigo} de ${u.nombre}`,"warn");
+                                  toast(`Key ${k.codigo} eliminada`);
+                                }} style={{background:"none",border:"none",cursor:"pointer",color:"#f87171"}} title="Eliminar key"><Trash2 size={11}/></button>
                               </div>;
                             })}
                           </div>
