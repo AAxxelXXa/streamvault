@@ -2012,16 +2012,55 @@ export default function StreamVault() {
             {/* OTORGADAS */}
             {adminTab==="granted"&&(
               <>
-                <div style={{marginBottom:20}}><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Cuentas Otorgadas</h2><p style={{color:subText,margin:0,fontSize:12}}>{granted.length} registros</p></div>
+                <div style={{marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+                  <div><h2 style={{fontSize:22,fontWeight:800,margin:"0 0 2px",color:textColor}}>Cuentas Otorgadas</h2><p style={{color:subText,margin:0,fontSize:12}}>{granted.length} registros</p></div>
+                  {granted.length>0&&<Btn variant="amber" small onClick={async()=>{
+                    if(!window.confirm(`¿Restablecer TODAS las ${granted.length} cuentas otorgadas al stock?`)) return;
+                    for(const g of granted){
+                      try{
+                        const platDoc=await getDoc(doc(db,"accounts",g.plataforma));
+                        if(platDoc.exists()){
+                          const lista=[...(platDoc.data().list||[])];
+                          const idx=lista.findIndex(a=>a.email===g.email||a.email===g.email?.trim());
+                          if(idx>=0){ lista[idx].status="disponible"; lista[idx].assignedTo=""; }
+                          else { lista.push({id:Date.now(),email:g.email,password:g.password,profile:g.profile||"",platform:g.plataforma,status:"disponible",expiresAt:""}); }
+                          await updateDoc(doc(db,"accounts",g.plataforma),{list:lista});
+                        }
+                        await deleteDoc(doc(db,"granted",String(g.id)));
+                      }catch(e){console.error(e);}
+                    }
+                    toast("✅ Todas las cuentas restablecidas al stock");
+                  }}><RefreshCw size={12}/> Restablecer todas</Btn>}
+                </div>
                 {granted.length===0?<div style={{textAlign:"center",color:subText,padding:"60px 0"}}>Sin cuentas otorgadas.</div>:(
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {granted.map(g=>{ const plat=PLATFORMS.find(p=>p.id===g.plataforma); return (
                       <div key={g.id} style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:12,padding:14}}>
                         <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8}}>
                           <PlatformIcon id={g.plataforma} size={26}/>
-                          <div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:textColor}}>{plat?.name}</div><div style={{fontSize:11,color:subText}}>{g.otorgadaEnFmt}{g.clienteEmail?` · ${g.clienteEmail}`:""}</div></div>
+                          <div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:textColor}}>{plat?.name}</div><div style={{fontSize:11,color:subText}}>{g.otorgadaEnFmt}{g.clienteEmail?` · ${g.clienteEmail}`:g.clienteId?` · ID:${g.clienteId}`:""}</div></div>
                           <Badge color="purple" dot>otorgada</Badge>
-                          <button onClick={()=>deleteDoc(doc(db,"granted",String(g.id)))} style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={12}/></button>
+                          <button
+                            title="Restablecer al stock"
+                            onClick={async()=>{
+                              if(!window.confirm(`¿Devolver ${g.email} al stock de ${plat?.name}?`)) return;
+                              try{
+                                const platDoc=await getDoc(doc(db,"accounts",g.plataforma));
+                                if(platDoc.exists()){
+                                  const lista=[...(platDoc.data().list||[])];
+                                  const idx=lista.findIndex(a=>(a.email||"").trim()===(g.email||"").trim());
+                                  if(idx>=0){ lista[idx].status="disponible"; lista[idx].assignedTo=""; }
+                                  else { lista.push({id:Date.now(),email:g.email,password:g.password,profile:g.profile||"",platform:g.plataforma,status:"disponible",expiresAt:""}); }
+                                  await updateDoc(doc(db,"accounts",g.plataforma),{list:lista});
+                                }
+                                await deleteDoc(doc(db,"granted",String(g.id)));
+                                toast(`✅ ${g.email} devuelta al stock`);
+                              }catch(e){ toast("Error al restablecer","error"); }
+                            }}
+                            style={{background:"#052e16",border:"1px solid #166534",borderRadius:8,padding:"5px 10px",cursor:"pointer",color:"#4ade80",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",gap:4}}>
+                            <RefreshCw size={11}/> Restablecer
+                          </button>
+                          <button onClick={()=>deleteDoc(doc(db,"granted",String(g.id)))} title="Solo eliminar registro" style={{background:"none",border:"none",cursor:"pointer",color:subText}}><Trash2 size={12}/></button>
                         </div>
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                           <div style={{background:darkMode?"#08080f":"#f0f2f8",borderRadius:8,padding:"7px 11px",fontSize:12}}>
