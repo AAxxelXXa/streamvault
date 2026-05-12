@@ -771,146 +771,208 @@ export default function StreamVault() {
 
       {/* ═══ LANDING PAGE ═══ */}
       {view==="landing"&&(
-        <div style={{minHeight:"100vh",background:darkMode?"#080810":"#f0f2f8",color:textColor,overflowX:"hidden"}}>
-          {/* NAV */}
-          <nav style={{position:"sticky",top:0,zIndex:50,background:darkMode?"rgba(8,8,16,0.85)":"rgba(240,242,248,0.85)",backdropFilter:"blur(16px)",borderBottom:`1px solid ${borderColor}`,padding:"0 20px",height:60,display:"flex",alignItems:"center",justifyContent:"space-between",maxWidth:1100,margin:"0 auto",width:"100%"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,#6366f1,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center"}}><Package size={18} color="#fff"/></div>
-              <span style={{fontWeight:900,fontSize:18,letterSpacing:-0.5}}>StreamVault</span>
-            </div>
-            <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"none",border:`1px solid ${borderColor}`,borderRadius:8,padding:"6px 14px",color:subText,fontSize:13,cursor:"pointer"}}>💬 Contacto</button>
-              <Btn small onClick={()=>setView("clientLogin")}>Iniciar sesión</Btn>
-            </div>
-          </nav>
+        <div style={{minHeight:"100vh",background:"#06060f",color:"#f0f0f5",fontFamily:"'Segoe UI',system-ui,sans-serif",overflowX:"hidden"}}>
+          <style>{`
+            @keyframes gradMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+            @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+            @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(18px)}}
+            @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+            @keyframes pulse2{0%,100%{opacity:0.6}50%{opacity:1}}
+            @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+            .landing-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px #6366f166!important}
+            .plan-card:hover{transform:translateY(-6px);border-color:#6366f1!important}
+            .plat-chip:hover{transform:scale(1.08);background:#ffffff14!important}
+            .trust-item:hover{background:#ffffff0a!important}
+            .landing-btn{transition:all 0.2s}
+            .plan-card{transition:all 0.25s}
+            .plat-chip{transition:all 0.2s}
+            .trust-item{transition:all 0.2s}
+          `}</style>
 
-          <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
+          {/* BG blobs */}
+          <div style={{position:"fixed",inset:0,zIndex:0,pointerEvents:"none",overflow:"hidden"}}>
+            <div style={{position:"absolute",width:700,height:700,borderRadius:"50%",background:"radial-gradient(circle,#6366f122,transparent 65%)",top:-200,left:-200,animation:"floatA 10s ease-in-out infinite"}}/>
+            <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle,#a855f71a,transparent 65%)",top:"30%",right:-180,animation:"floatB 13s ease-in-out infinite"}}/>
+            <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,#ec48991a,transparent 65%)",bottom:-100,left:"25%",animation:"floatA 9s ease-in-out infinite 2s"}}/>
+            <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(#ffffff04 1px,transparent 1px),linear-gradient(90deg,#ffffff04 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
+          </div>
+
+          <div style={{position:"relative",zIndex:1}}>
+
+            {/* NAVBAR */}
+            <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 24px",borderBottom:"1px solid #ffffff0a",backdropFilter:"blur(12px)",background:"#06060fcc",position:"sticky",top:0,zIndex:100}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#6366f1,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 20px #6366f155"}}><Package size={18} color="#fff"/></div>
+                <span style={{fontWeight:900,fontSize:18,letterSpacing:-0.5,background:"linear-gradient(90deg,#c4b5fd,#f0f0f5)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>StreamVault</span>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,background:"#052e1644",border:"1px solid #166534",borderRadius:999,padding:"4px 12px",fontSize:11,color:"#4ade80"}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:"#4ade80",animation:"pulse2 2s infinite"}}/>
+                  {serviceStatus.status==="online"?"Servicio activo":"Ver estado"}
+                </div>
+                <button className="landing-btn" onClick={()=>setView("clientLogin")} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:10,padding:"8px 18px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",boxShadow:"0 4px 20px #6366f144"}}>Iniciar sesión</button>
+              </div>
+            </nav>
 
             {/* HERO */}
-            <section style={{textAlign:"center",padding:"70px 20px 50px"}}>
-              <div style={{display:"inline-flex",alignItems:"center",gap:8,background:darkMode?"#1a0a2e":"#ede9fe",border:"1px solid #6366f144",borderRadius:999,padding:"5px 16px",fontSize:12,color:"#a855f7",fontWeight:600,marginBottom:20}}>
-                ⚡ Activación inmediata · Soporte 24/7
+            <section style={{textAlign:"center",padding:"80px 24px 60px",animation:"fadeUp 0.6s ease both"}}>
+              <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"#6366f122",border:"1px solid #6366f144",borderRadius:999,padding:"6px 16px",fontSize:12,color:"#a5b4fc",marginBottom:24,fontWeight:600}}>
+                <Zap size={12}/> Activación inmediata · Pago por Yape/Plin
               </div>
-              <h1 style={{fontSize:"clamp(32px,6vw,64px)",fontWeight:900,margin:"0 0 18px",letterSpacing:-2,lineHeight:1.1}}>
-                Accede a todo el streaming<br/>
-                <span style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>desde S/. 10</span>
+              <h1 style={{fontSize:"clamp(36px,6vw,68px)",fontWeight:900,margin:"0 0 16px",letterSpacing:-2,lineHeight:1.08}}>
+                Todo el streaming
+                <br/>
+                <span style={{background:"linear-gradient(135deg,#6366f1,#a855f7,#ec4899)",backgroundSize:"200% 200%",animation:"gradMove 4s ease infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>por S/. 10 al mes</span>
               </h1>
-              <p style={{fontSize:18,color:subText,margin:"0 0 36px",maxWidth:500,marginLeft:"auto",marginRight:"auto"}}>
-                Netflix, Max, Disney+, Spotify y más. Keys activadas en minutos, sin complicaciones.
+              <p style={{fontSize:18,color:"#9ca3af",margin:"0 auto 36px",maxWidth:520,lineHeight:1.6}}>
+                Netflix, Max, Disney+, Spotify y más. Keys activadas al instante. Soporte 24/7 por Telegram.
               </p>
-              <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-                <Btn onClick={()=>setView("clientLogin")} style={{padding:"14px 32px",fontSize:16,borderRadius:12}}>🚀 Ver mis plataformas</Btn>
-                <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{padding:"14px 32px",fontSize:16,borderRadius:12,background:"none",border:`1px solid ${borderColor}`,color:textColor,cursor:"pointer",fontWeight:600}}>💬 Hablar con soporte</button>
-              </div>
 
-              {/* Stats bar */}
-              <div style={{display:"flex",justifyContent:"center",gap:32,marginTop:50,flexWrap:"wrap"}}>
+              {/* Stats reales de Firebase */}
+              <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap",marginBottom:40}}>
                 {[
-                  {n: users.filter(u=>u.activo).length || "50+", label:"Clientes activos"},
-                  {n: Object.values(accounts).flat().filter(a=>a.status==="disponible").length || "100+", label:"Cuentas disponibles"},
-                  {n:"12", label:"Plataformas"},
-                  {n:"24/7", label:"Soporte"},
-                ].map(s=>(
-                  <div key={s.label} style={{textAlign:"center"}}>
-                    <div style={{fontSize:28,fontWeight:900,background:"linear-gradient(135deg,#6366f1,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{s.n}</div>
-                    <div style={{fontSize:12,color:subText,marginTop:2}}>{s.label}</div>
+                  {num: users.length || "50+", label:"Clientes activos"},
+                  {num: availableAcc || "100+", label:"Cuentas disponibles"},
+                  {num: ratings.length>0?(ratings.reduce((s,r)=>s+(r.valor||5),0)/ratings.length).toFixed(1)+"★":"5.0★", label:"Calificación"},
+                  {num:"24/7", label:"Soporte Telegram"},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:"#ffffff08",border:"1px solid #ffffff12",borderRadius:16,padding:"14px 24px",minWidth:100,animation:`fadeUp 0.6s ease both`,animationDelay:`${0.1*i}s`}}>
+                    <div style={{fontSize:26,fontWeight:900,color:"#f0f0f5",letterSpacing:-1}}>{s.num}</div>
+                    <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginTop:2}}>{s.label}</div>
                   </div>
                 ))}
               </div>
+
+              {/* CTA buttons */}
+              <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+                <button className="landing-btn" onClick={()=>document.getElementById("landing-plans").scrollIntoView({behavior:"smooth"})} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"14px 32px",color:"#fff",fontWeight:800,fontSize:16,cursor:"pointer",boxShadow:"0 8px 32px #6366f155"}}>
+                  Ver planes ↓
+                </button>
+                <button className="landing-btn" onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"transparent",border:"1px solid #ffffff22",borderRadius:12,padding:"14px 28px",color:"#f0f0f5",fontWeight:700,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+                  <MessageCircle size={16}/> Hablar con soporte
+                </button>
+              </div>
             </section>
 
-            {/* PLATFORMS */}
-            <section style={{marginBottom:60}}>
-              <h2 style={{textAlign:"center",fontSize:26,fontWeight:800,marginBottom:8,letterSpacing:-0.5}}>Plataformas disponibles</h2>
-              <p style={{textAlign:"center",color:subText,fontSize:14,marginBottom:32}}>Acceso inmediato a las mejores plataformas</p>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>
+            {/* PLATAFORMAS */}
+            <section style={{padding:"0 24px 70px"}}>
+              <p style={{textAlign:"center",fontSize:13,color:"#6b7280",fontWeight:600,letterSpacing:2,textTransform:"uppercase",marginBottom:20}}>Plataformas disponibles</p>
+              <div style={{display:"flex",flexWrap:"wrap",gap:10,justifyContent:"center",maxWidth:700,margin:"0 auto"}}>
                 {PLATFORMS.map(p=>(
-                  <div key={p.id} style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:"18px 14px",textAlign:"center",cursor:"pointer",transition:"transform 0.2s"}}
-                    onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
-                    onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-                    <div style={{width:44,height:44,borderRadius:12,background:p.color,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px",fontWeight:900,fontSize:13,color:"#fff",boxShadow:`0 0 20px ${p.color}55`}}>{p.icon}</div>
-                    <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>{p.name}</div>
-                    <div style={{fontSize:11,color:subText,lineHeight:1.3}}>{p.desc}</div>
+                  <div key={p.id} className="plat-chip" style={{display:"flex",alignItems:"center",gap:8,background:"#ffffff0a",border:"1px solid #ffffff14",borderRadius:12,padding:"8px 14px",cursor:"default"}}>
+                    <div style={{width:28,height:28,borderRadius:8,background:p.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",boxShadow:`0 0 10px ${p.color}55`}}>{p.icon}</div>
+                    <span style={{fontSize:13,fontWeight:600,color:"#d1d5db"}}>{p.name}</span>
+                    {accounts[p.id]&&accounts[p.id].filter(a=>a.status==="disponible").length>0&&(
+                      <span style={{fontSize:9,background:"#052e16",color:"#4ade80",border:"1px solid #166534",borderRadius:999,padding:"1px 6px",fontWeight:700}}>✓</span>
+                    )}
                   </div>
                 ))}
               </div>
             </section>
 
             {/* PLANES */}
-            <section style={{marginBottom:60}} id="planes">
-              <h2 style={{textAlign:"center",fontSize:26,fontWeight:800,marginBottom:8,letterSpacing:-0.5}}>Planes y precios</h2>
-              <p style={{textAlign:"center",color:subText,fontSize:14,marginBottom:32}}>Sin contratos, sin letras pequeñas</p>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16}}>
+            <section id="landing-plans" style={{padding:"0 24px 80px"}}>
+              <div style={{textAlign:"center",marginBottom:40}}>
+                <h2 style={{fontSize:"clamp(28px,4vw,42px)",fontWeight:900,margin:"0 0 10px",letterSpacing:-1}}>Elige tu plan</h2>
+                <p style={{color:"#6b7280",fontSize:15,margin:0}}>Todos los planes incluyen acceso a todas las plataformas disponibles</p>
+              </div>
+              <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",maxWidth:900,margin:"0 auto"}}>
                 {[
-                  {label:"1 Mes",meses:1,precio:"S/. 10",popular:false,features:["1 plataforma a elegir","Key de acceso inmediato","Soporte por Telegram"]},
-                  {label:"3 Meses",meses:3,precio:"S/. 30",popular:true,features:["1 plataforma a elegir","Ahorra vs mensual","Soporte prioritario","Renovación recordatorio"]},
-                  {label:"6 Meses",meses:6,precio:"S/. 60",popular:false,features:["1 plataforma a elegir","Mejor precio por mes","Soporte VIP","Notificación de vencimiento"]},
-                ].map(plan=>(
-                  <div key={plan.label} style={{background:plan.popular?(darkMode?"#1a0a2e":"#ede9fe"):cardBg,border:plan.popular?"2px solid #a855f7":`1px solid ${borderColor}`,borderRadius:20,padding:28,position:"relative",transform:plan.popular?"scale(1.02)":"scale(1)"}}>
-                    {plan.popular&&<div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#6366f1,#a855f7)",color:"#fff",fontSize:11,fontWeight:700,padding:"3px 14px",borderRadius:999}}>⭐ MÁS POPULAR</div>}
-                    <div style={{fontSize:14,fontWeight:600,color:subText,marginBottom:6}}>{plan.label}</div>
-                    <div style={{fontSize:38,fontWeight:900,marginBottom:4,letterSpacing:-1}}>{plan.precio}</div>
-                    <div style={{fontSize:12,color:subText,marginBottom:20}}>pago único · Yape o Plin</div>
-                    <ul style={{listStyle:"none",padding:0,margin:"0 0 20px",display:"flex",flexDirection:"column",gap:8}}>
-                      {plan.features.map(f=>(
-                        <li key={f} style={{fontSize:13,color:textColor,display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{color:"#4ade80",fontWeight:700}}>✓</span> {f}
+                  {nombre:"Básico",meses:1,precio:"S/. 10",priceNum:10,popular:false,color:"#374151",desc:"Perfecto para empezar",features:["1 mes de acceso","Todas las plataformas","Activación inmediata","Soporte por Telegram"]},
+                  {nombre:"Popular",meses:3,precio:"S/. 30",priceNum:30,popular:true,color:"#6366f1",desc:"El más elegido 🔥",features:["3 meses de acceso","Todas las plataformas","Activación inmediata","Soporte prioritario","Ahorra S/. 0"]},
+                  {nombre:"Premium",meses:6,precio:"S/. 60",priceNum:60,popular:false,color:"#a855f7",desc:"Mejor relación precio",features:["6 meses de acceso","Todas las plataformas","Activación inmediata","Soporte VIP","Renovación con descuento"]},
+                ].map((plan,i)=>(
+                  <div key={i} className="plan-card" style={{background:plan.popular?"linear-gradient(145deg,#0f0f2a,#1a0a2e)":"#0f0f1a",border:`2px solid ${plan.popular?"#6366f1":"#ffffff12"}`,borderRadius:22,padding:"28px 24px",width:"100%",maxWidth:270,position:"relative",animation:`fadeUp 0.6s ease both`,animationDelay:`${0.1+0.15*i}s`}}>
+                    {plan.popular&&<div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(90deg,#6366f1,#a855f7)",borderRadius:999,padding:"4px 16px",fontSize:11,fontWeight:800,color:"#fff",whiteSpace:"nowrap"}}>⭐ MÁS POPULAR</div>}
+                    <div style={{marginBottom:20}}>
+                      <div style={{fontSize:13,color:"#6b7280",fontWeight:600,marginBottom:4}}>{plan.nombre}</div>
+                      <div style={{fontSize:40,fontWeight:900,letterSpacing:-2,color:"#f0f0f5",lineHeight:1}}>{plan.precio}</div>
+                      <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{plan.meses===1?"por 1 mes":plan.meses===3?"por 3 meses":"por 6 meses"}</div>
+                      <div style={{fontSize:12,color:plan.popular?"#a5b4fc":"#9ca3af",marginTop:6,fontWeight:500}}>{plan.desc}</div>
+                    </div>
+                    <ul style={{listStyle:"none",margin:"0 0 24px",padding:0,display:"flex",flexDirection:"column",gap:8}}>
+                      {plan.features.map((f,j)=>(
+                        <li key={j} style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"#d1d5db"}}>
+                          <span style={{width:18,height:18,borderRadius:"50%",background:plan.popular?"#6366f133":"#ffffff0a",border:`1px solid ${plan.popular?"#6366f1":"#ffffff22"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                            <Check size={10} color={plan.popular?"#a5b4fc":"#9ca3af"}/>
+                          </span>
+                          {f}
                         </li>
                       ))}
                     </ul>
-                    <Btn onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{width:"100%",justifyContent:"center",padding:"11px 0",background:plan.popular?"linear-gradient(135deg,#6366f1,#a855f7)":undefined}}>
+                    <button className="landing-btn" onClick={()=>{ setPayModal({plan:`${plan.meses} ${plan.meses===1?"Mes":"Meses"}`,meses:plan.meses,precio:plan.precio}); setPayStep(1); setPayCaptura(null); setView("clientLogin"); }} style={{width:"100%",background:plan.popular?"linear-gradient(135deg,#6366f1,#a855f7)":"transparent",border:plan.popular?"none":`1px solid #ffffff22`,borderRadius:11,padding:"11px 0",color:"#f0f0f5",fontWeight:700,fontSize:14,cursor:"pointer",boxShadow:plan.popular?"0 6px 24px #6366f155":"none"}}>
                       Contratar ahora
-                    </Btn>
+                    </button>
                   </div>
                 ))}
               </div>
             </section>
 
             {/* CONFIANZA */}
-            <section style={{marginBottom:60}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
+            <section style={{padding:"0 24px 70px"}}>
+              <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap",maxWidth:800,margin:"0 auto"}}>
                 {[
-                  {icon:"⚡",title:"Activación inmediata",desc:"Tu key llega en minutos tras confirmar el pago"},
-                  {icon:"🔒",title:"Pago seguro",desc:"Yape o Plin, sin tarjetas ni datos bancarios"},
-                  {icon:"💬",title:"Soporte 24/7",desc:"Bot de Telegram disponible todo el día"},
-                  {icon:"🔄",title:"Renovación fácil",desc:"Te avisamos antes de que venza tu plan"},
-                ].map(c=>(
-                  <div key={c.title} style={{background:cardBg,border:`1px solid ${borderColor}`,borderRadius:16,padding:"20px 18px",textAlign:"center"}}>
-                    <div style={{fontSize:28,marginBottom:10}}>{c.icon}</div>
-                    <div style={{fontWeight:700,fontSize:14,marginBottom:6}}>{c.title}</div>
-                    <div style={{fontSize:12,color:subText,lineHeight:1.5}}>{c.desc}</div>
+                  {icon:"⚡",title:"Activación inmediata",desc:"Tu key llega en minutos después de confirmar el pago"},
+                  {icon:"🔒",title:"Pago seguro",desc:"Yape y Plin. Sin tarjeta, sin complicaciones"},
+                  {icon:"💬",title:"Soporte 24/7",desc:"Atención por Telegram todos los días"},
+                  {icon:"🔄",title:"Actualización constante",desc:"Stock siempre activo y renovado"},
+                ].map((t,i)=>(
+                  <div key={i} className="trust-item" style={{background:"#ffffff06",border:"1px solid #ffffff0e",borderRadius:16,padding:"20px 20px",maxWidth:180,textAlign:"center"}}>
+                    <div style={{fontSize:28,marginBottom:8}}>{t.icon}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:"#f0f0f5",marginBottom:5}}>{t.title}</div>
+                    <div style={{fontSize:12,color:"#6b7280",lineHeight:1.5}}>{t.desc}</div>
                   </div>
                 ))}
               </div>
             </section>
 
+            {/* TESTIMONIOS */}
+            {ratings.length>0&&(
+              <section style={{padding:"0 24px 70px"}}>
+                <div style={{textAlign:"center",marginBottom:28}}>
+                  <h2 style={{fontSize:26,fontWeight:900,margin:"0 0 6px",letterSpacing:-0.5}}>Lo que dicen nuestros clientes</h2>
+                  <p style={{color:"#6b7280",fontSize:14,margin:0}}>{ratings.length} reseñas · {(ratings.reduce((s,r)=>s+(r.valor||5),0)/ratings.length).toFixed(1)}★ promedio</p>
+                </div>
+                <div style={{display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center",maxWidth:860,margin:"0 auto"}}>
+                  {ratings.slice(0,6).map((r,i)=>(
+                    <div key={i} style={{background:"#0f0f1a",border:"1px solid #ffffff0e",borderRadius:16,padding:"18px",maxWidth:250,flex:"1 1 200px"}}>
+                      <div style={{display:"flex",gap:2,marginBottom:8}}>{Array.from({length:r.valor||5}).map((_,j)=><Star key={j} size={12} fill="#fbbf24" color="#fbbf24"/>)}</div>
+                      <p style={{fontSize:13,color:"#d1d5db",margin:"0 0 10px",lineHeight:1.5,fontStyle:"italic"}}>"{r.comentario||"Excelente servicio"}"</p>
+                      <div style={{fontSize:11,color:"#6b7280",fontWeight:600}}>{r.clienteNombre||"Cliente verificado"}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* CTA FINAL */}
-            <section style={{textAlign:"center",padding:"40px 20px 60px"}}>
-              <div style={{background:darkMode?"linear-gradient(135deg,#1a0a2e,#0c1a3a)":"linear-gradient(135deg,#ede9fe,#dbeafe)",border:`1px solid ${borderColor}`,borderRadius:24,padding:"48px 32px"}}>
-                <h2 style={{fontSize:28,fontWeight:900,marginBottom:12,letterSpacing:-0.5}}>¿Listo para empezar?</h2>
-                <p style={{color:subText,fontSize:15,marginBottom:28}}>Contacta al soporte y activa tu plan hoy mismo</p>
+            <section style={{padding:"0 24px 80px",textAlign:"center"}}>
+              <div style={{background:"linear-gradient(135deg,#0f0f2a,#1a0a2e)",border:"1px solid #6366f133",borderRadius:24,padding:"48px 32px",maxWidth:600,margin:"0 auto"}}>
+                <h2 style={{fontSize:32,fontWeight:900,margin:"0 0 10px",letterSpacing:-1}}>¿Listo para empezar?</h2>
+                <p style={{color:"#9ca3af",fontSize:15,margin:"0 0 28px",lineHeight:1.6}}>Activa tu acceso hoy mismo. Soporte inmediato por Telegram.</p>
                 <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-                  <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"linear-gradient(135deg,#229ED9,#1a7bbf)",color:"#fff",border:"none",borderRadius:10,padding:"13px 28px",fontSize:15,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
-                    ✈️ Contactar por Telegram
+                  <button className="landing-btn" onClick={()=>setView("clientLogin")} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"14px 32px",color:"#fff",fontWeight:800,fontSize:16,cursor:"pointer",boxShadow:"0 8px 32px #6366f155"}}>
+                    Ingresar ahora →
                   </button>
-                  <button onClick={()=>window.open(ADMIN_WA,"_blank")} style={{background:"linear-gradient(135deg,#25D366,#128C7E)",color:"#fff",border:"none",borderRadius:10,padding:"13px 28px",fontSize:15,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
-                    📱 WhatsApp
+                  <button className="landing-btn" onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"transparent",border:"1px solid #6366f155",borderRadius:12,padding:"14px 24px",color:"#a5b4fc",fontWeight:700,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+                    <MessageCircle size={16}/> Telegram
                   </button>
                 </div>
-                <p style={{fontSize:12,color:subText,marginTop:20}}>¿Ya tienes cuenta? <button onClick={()=>setView("clientLogin")} style={{background:"none",border:"none",color:"#6366f1",cursor:"pointer",fontWeight:600,fontSize:12}}>Iniciar sesión →</button></p>
               </div>
             </section>
 
-          </div>
-
-          {/* FOOTER */}
-          <div style={{borderTop:`1px solid ${borderColor}`,textAlign:"center",padding:"20px",fontSize:12,color:subText}}>
-            <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:16,marginBottom:8}}>
-              <button onClick={()=>setDarkMode(!darkMode)} style={{background:"none",border:"none",color:subText,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:4}}>{darkMode?<Sun size={12}/>:<Moon size={12}/>} {darkMode?"Modo claro":"Modo oscuro"}</button>
-              <span>·</span>
-              <button onClick={()=>setView("adminLogin")} style={{background:"none",border:"none",color:subText,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:4}}><Shield size={11}/> Admin</button>
-            </div>
-            StreamVault © {new Date().getFullYear()} · Todos los derechos reservados
+            {/* FOOTER */}
+            <footer style={{borderTop:"1px solid #ffffff08",padding:"20px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:24,height:24,borderRadius:7,background:"linear-gradient(135deg,#6366f1,#a855f7)",display:"flex",alignItems:"center",justifyContent:"center"}}><Package size={12} color="#fff"/></div>
+                <span style={{fontSize:12,color:"#6b7280",fontWeight:600}}>StreamVault © 2026</span>
+              </div>
+              <div style={{display:"flex",gap:16,alignItems:"center"}}>
+                <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6b7280",fontSize:12,display:"flex",alignItems:"center",gap:4}}><MessageCircle size={12}/> Telegram</button>
+                <button onClick={()=>window.open(ADMIN_WA,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6b7280",fontSize:12}}>WhatsApp</button>
+                <button onClick={()=>setView("adminLogin")} style={{background:"none",border:"none",cursor:"pointer",color:"#374151",fontSize:11,display:"flex",alignItems:"center",gap:4}}><Shield size={10}/> Admin</button>
+              </div>
+            </footer>
           </div>
         </div>
       )}
@@ -941,9 +1003,6 @@ export default function StreamVault() {
               <Btn onClick={clientLogin} style={{width:"100%",justifyContent:"center",padding:"12px 0",fontSize:15,marginBottom:14}}><Unlock size={15}/> Iniciar sesión</Btn>
               <div style={{textAlign:"center",fontSize:12,color:subText,marginBottom:12}}>
                 ¿No tienes cuenta? <button onClick={()=>window.open(ADMIN_WA,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6366f1",fontWeight:600,fontSize:12}}>Contáctanos</button>
-              </div>
-              <div style={{textAlign:"center",fontSize:12,color:subText,marginBottom:12}}>
-                <button onClick={()=>setView("landing")} style={{background:"none",border:"none",cursor:"pointer",color:subText,fontSize:12}}>← Ver planes y precios</button>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:`1px solid ${borderColor}`,paddingTop:12}}>
                 <button onClick={()=>setView("adminLogin")} style={{background:"none",border:"none",cursor:"pointer",color:subText,fontSize:11,display:"flex",alignItems:"center",gap:4}}><Shield size={11}/> Admin</button>
