@@ -155,6 +155,7 @@ export default function StreamVault() {
     setViewRaw(newView);
   }
   const viewRef = useRef("landing");
+  const [landingPayModal, setLandingPayModal] = useState(null);
   const [adminTab,    setAdminTab]    = useState("accounts");
 
   // Sessions
@@ -938,7 +939,7 @@ export default function StreamVault() {
                         </li>
                       ))}
                     </ul>
-                    <button className="landing-btn" onClick={()=>{ setPayModal({plan:`${plan.meses} ${plan.meses===1?"Mes":"Meses"}`,meses:plan.meses,precio:plan.precio}); setPayStep(1); setPayCaptura(null); setView("clientLogin"); }} style={{width:"100%",background:plan.popular?"linear-gradient(135deg,#6366f1,#a855f7)":"transparent",border:plan.popular?"none":`1px solid #ffffff22`,borderRadius:11,padding:"11px 0",color:"#f0f0f5",fontWeight:700,fontSize:14,cursor:"pointer",boxShadow:plan.popular?"0 6px 24px #6366f155":"none"}}>
+                    <button className="landing-btn" onClick={()=>setLandingPayModal({plan:`${plan.meses} ${plan.meses===1?"Mes":"Meses"}`,meses:plan.meses,precio:plan.precio,priceNum:plan.priceNum})} style={{width:"100%",background:plan.popular?"linear-gradient(135deg,#6366f1,#a855f7)":"transparent",border:plan.popular?"none":`1px solid #ffffff22`,borderRadius:11,padding:"11px 0",color:"#f0f0f5",fontWeight:700,fontSize:14,cursor:"pointer",boxShadow:plan.popular?"0 6px 24px #6366f155":"none"}}>
                       Contratar ahora
                     </button>
                   </div>
@@ -1011,6 +1012,55 @@ export default function StreamVault() {
                 <button onClick={()=>setView("adminLogin")} style={{background:"none",border:"none",cursor:"pointer",color:"#374151",fontSize:11,display:"flex",alignItems:"center",gap:4}}><Shield size={10}/> Admin</button>
               </div>
             </footer>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ LANDING PAY MODAL ═══ */}
+      {landingPayModal&&(
+        <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setLandingPayModal(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#0f0f1a",border:"1px solid #6366f133",borderRadius:24,padding:"32px 28px",maxWidth:420,width:"100%",fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <div style={{fontSize:40,marginBottom:8}}>💳</div>
+              <h2 style={{fontSize:22,fontWeight:900,color:"#f0f0f5",margin:"0 0 6px",letterSpacing:-0.5}}>Pagar con Yape / Plin</h2>
+              <p style={{color:"#6b7280",fontSize:14,margin:0}}>Plan {landingPayModal.plan} — <span style={{color:"#a5b4fc",fontWeight:700}}>{landingPayModal.precio}</span></p>
+            </div>
+
+            <div style={{background:"#ffffff08",border:"1px solid #ffffff12",borderRadius:16,padding:"20px",marginBottom:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#7c3aed,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>📱</div>
+                <div>
+                  <div style={{fontSize:12,color:"#6b7280",fontWeight:600}}>Número Yape / Plin</div>
+                  <div style={{fontSize:22,fontWeight:900,color:"#f0f0f5",letterSpacing:1}}>901-815-489</div>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div style={{background:"#ffffff06",borderRadius:10,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,color:"#6b7280",marginBottom:3}}>💰 Monto exacto</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#a5b4fc"}}>{landingPayModal.precio}</div>
+                </div>
+                <div style={{background:"#ffffff06",borderRadius:10,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,color:"#6b7280",marginBottom:3}}>📝 Concepto</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#f0f0f5"}}>StreamVault {landingPayModal.plan}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{background:"#052e1644",border:"1px solid #166534",borderRadius:12,padding:"12px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"flex-start"}}>
+              <span style={{fontSize:18}}>📌</span>
+              <div style={{fontSize:13,color:"#86efac",lineHeight:1.5}}>
+                Después de pagar, <b>envía la captura al bot de Telegram</b> y recibirás tu acceso en minutos.
+              </div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <button onClick={()=>{ window.open(ADMIN_TELEGRAM,"_blank"); setLandingPayModal(null); }} style={{width:"100%",background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"13px 0",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <MessageCircle size={18}/> Ir al bot de Telegram
+              </button>
+              <button onClick={()=>setLandingPayModal(null)} style={{width:"100%",background:"transparent",border:"1px solid #ffffff15",borderRadius:12,padding:"11px 0",color:"#6b7280",fontWeight:600,fontSize:14,cursor:"pointer"}}>
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
