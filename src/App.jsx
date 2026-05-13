@@ -141,7 +141,20 @@ export default function StreamVault() {
   // Auth
   const [isAdmin,     setIsAdmin]     = useState(false);
   const [clientUser,  setClientUser]  = useState(null);
-  const [view,        setView]        = useState("landing");
+  const [view,        setViewRaw]     = useState("landing");
+
+  // Navegación con soporte para botón "atrás" del navegador
+  function setView(newView, opts={}) {
+    const prev = viewRef.current;
+    // Only push history for public→login or login→landing transitions
+    const pushable = ["landing","clientLogin","adminLogin"];
+    if (pushable.includes(newView) && newView !== prev) {
+      window.history.pushState({ view: newView }, "", "#"+newView);
+    }
+    viewRef.current = newView;
+    setViewRaw(newView);
+  }
+  const viewRef = useRef("landing");
   const [adminTab,    setAdminTab]    = useState("accounts");
 
   // Sessions
@@ -239,6 +252,18 @@ export default function StreamVault() {
 
   // Status admin
   const [newStatus,   setNewStatus]   = useState({status:"online",msg:""});
+
+  // ── Browser back button ──
+  useEffect(()=>{
+    window.history.replaceState({ view: "landing" }, "", "#landing");
+    const handlePop = (e) => {
+      const v = e.state?.view;
+      if (v === "landing") { setViewRaw("landing"); viewRef.current = "landing"; }
+      else if (v === "clientLogin") { setViewRaw("clientLogin"); viewRef.current = "clientLogin"; }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
 
   // ── Firebase ──
   useEffect(() => {
