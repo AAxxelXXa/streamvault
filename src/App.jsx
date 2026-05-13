@@ -24,7 +24,8 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
 const NTFY_TOPIC = "streamvault-axel-2026";
-const ADMIN_TELEGRAM = "https://t.me/Jagerchk_bot";
+const ADMIN_TELEGRAM = "https://t.me/Jagerchk_bot";  // Opens Telegram app on mobile
+const ADMIN_TELEGRAM_DEEP = "tg://resolve?domain=Jagerchk_bot";
 const ADMIN_WA = "https://wa.me/51901815489";
 
 async function pushNotify(title, message) {
@@ -1054,7 +1055,12 @@ export default function StreamVault() {
             </div>
 
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <button onClick={()=>{ window.open(ADMIN_TELEGRAM,"_blank"); setLandingPayModal(null); }} style={{width:"100%",background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"13px 0",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <button onClick={()=>{ 
+                const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+                if(isMobile){ window.location.href="tg://resolve?domain=Jagerchk_bot"; }
+                else { window.open(ADMIN_TELEGRAM,"_blank"); }
+                setLandingPayModal(null); 
+              }} style={{width:"100%",background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"13px 0",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                 <MessageCircle size={18}/> Ir al bot de Telegram
               </button>
               <button onClick={()=>setLandingPayModal(null)} style={{width:"100%",background:"transparent",border:"1px solid #ffffff15",borderRadius:12,padding:"11px 0",color:"#6b7280",fontWeight:600,fontSize:14,cursor:"pointer"}}>
