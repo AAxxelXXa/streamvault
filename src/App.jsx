@@ -1056,9 +1056,10 @@ export default function StreamVault() {
 
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <button onClick={()=>{ 
+                const param = `plan_${landingPayModal.meses}`;
                 const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-                if(isMobile){ window.location.href="tg://resolve?domain=Jagerchk_bot"; }
-                else { window.open(ADMIN_TELEGRAM,"_blank"); }
+                if(isMobile){ window.location.href=`tg://resolve?domain=Jagerchk_bot&start=${param}`; }
+                else { window.open(`https://t.me/Jagerchk_bot?start=${param}`,"_blank"); }
                 setLandingPayModal(null); 
               }} style={{width:"100%",background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",borderRadius:12,padding:"13px 0",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                 <MessageCircle size={18}/> Ir al bot de Telegram
