@@ -24,7 +24,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
 const NTFY_TOPIC = "streamvault-axel-2026";
-const ADMIN_TELEGRAM = "https://t.me/alex_eren";
+const ADMIN_TELEGRAM = "https://t.me/Jagerchk_bot";
 const ADMIN_WA = "https://wa.me/51901815489";
 
 async function pushNotify(title, message) {
@@ -1564,7 +1564,7 @@ export default function StreamVault() {
             <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 8px",color:textColor}}>¿Tienes alguna duda?</h2>
             <p style={{color:subText,fontSize:14,margin:"0 0 20px"}}>Disponibles por Telegram y WhatsApp</p>
             <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-              <Btn onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"linear-gradient(135deg,#0088cc,#006699)",border:"none"}}><Send size={14}/> @alex_eren</Btn>
+              <Btn onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"linear-gradient(135deg,#0088cc,#006699)",border:"none"}}><Send size={14}/> @Jagerchk_bot</Btn>
               <Btn onClick={()=>window.open(ADMIN_WA,"_blank")} style={{background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none"}}><Send size={14}/> WhatsApp</Btn>
             </div>
           </div>
@@ -1648,7 +1648,7 @@ export default function StreamVault() {
               )}
               <div style={{background:darkMode?"#0c1a3a":"#e0e7ff",border:"1px solid #1e3a8a",borderRadius:12,padding:14,marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
                 <div><div style={{fontSize:13,fontWeight:700,color:"#60a5fa"}}>¿Tienes algún problema?</div><div style={{fontSize:11,color:subText}}>Contacta al administrador</div></div>
-                <Btn variant="ghost" onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{border:"1px solid #1e3a8a",color:"#60a5fa"}} small><Send size={12}/> @alex_eren</Btn>
+                <Btn variant="ghost" onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{border:"1px solid #1e3a8a",color:"#60a5fa"}} small><Send size={12}/> @Jagerchk_bot</Btn>
               </div>
               <div style={{display:"flex",gap:8,marginTop:4,flexWrap:"wrap"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
@@ -2486,7 +2486,7 @@ export default function StreamVault() {
       )}
 
       <footer style={{borderTop:`1px solid ${borderColor}`,padding:"20px 16px",textAlign:"center",color:subText,fontSize:12,marginTop:40}}>
-        StreamVault © 2026 · <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6366f1",fontSize:12}}>@alex_eren</button>
+        StreamVault © 2026 · <button onClick={()=>window.open(ADMIN_TELEGRAM,"_blank")} style={{background:"none",border:"none",cursor:"pointer",color:"#6366f1",fontSize:12}}>@Jagerchk_bot</button>
       </footer>
 
       </div>
